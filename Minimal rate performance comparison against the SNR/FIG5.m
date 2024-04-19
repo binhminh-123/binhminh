@@ -22,11 +22,11 @@ A = 4;
 delta = 0.25;
 D_oversample=1;
 
-realsnr_max=0;
-realsnr_list=[-10:1:realsnr_max];
+realsnr_max=0; % giá trị nhiễu tối đa
+realsnr_list=[-10:1:realsnr_max]; % khoảng giá trị SNR
 
 
-%Thay đổi các giá trị x
+%Thay đổi các giá trị SNR
 Bigfor_list=realsnr_list;
 
 %% Tạo codebook
@@ -68,7 +68,7 @@ for idx_Bigfor=1:length(Bigfor_list)
     LengthBigfor_list=length(Bigfor_list);
     %num_K=K_list(idx_K);
     
-    %Thay đổi giá trị x
+    %Thay đổi giá trị SNR từ giai dB sang tuyến tính
     SNR_linear = 10.^(Bigfor_list(idx_Bigfor)/10.);
 
     %% Lưu bộ đệm để tính trung bình (a=a+data./ITER)
