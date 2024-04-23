@@ -116,7 +116,7 @@ for idx_K=1:length(K_list)
             % Tạo tia viễn trường
             [maxGainFC,idxFC]=max(abs(far_codebook*Hc).^2); %tính giá trị lớn nhất của module bình phương kênh truyền từ RIS tới người dùng hiện tại
             FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).'; %lưu giá trị trên vào cột thứ k của ma trận FCCodewordsBuffer
-            FCGainBuffer(k)=maxGainFC;
+            FCGainBuffer(k)=maxGainFC; %biến lưu giá trị maxgainFC cho người dùng thứ k
             
             % Tạo tia cận trường
             array_gain = 0; %Biến này sẽ lưu trữ giá trị lớn nhất của module bình phương kênh truyền từ RIS đến người dùng.
@@ -153,14 +153,15 @@ for idx_K=1:length(K_list)
             end
             
             %Pft precoding
-            wc_opt = exp(1j*phase(Hc'));%If can not work in this line maybe with different Matlab version, you can try to use "angle" function to replace "phase"
-            wc_opt=wc_opt./abs(wc_opt)/sqrt(N);
-            array_gainpft = abs(wc_opt*Hc)^2;
-            PftCodewordsBuffer(:,k)=wc_opt.';
-            PftGainBuffer(k)=array_gainpft;
+            %%dòng dưới tạo ra ma trận omega theo công thức (21)
+            wc_opt = exp(1j*phase(Hc')); %If can not work in this line maybe with different Matlab version, you can try to use "angle" function to replace "phase"
+            wc_opt=wc_opt./abs(wc_opt)/sqrt(N); %chuẩn hóa ma trận trên
+            array_gainpft = abs(wc_opt*Hc)^2; %cho biết mức độ mạnh yếu của tín hiệu truyền qua kênh từ RIS đến người dùng sau khi áp dụng PFT (Precoding)
+            PftCodewordsBuffer(:,k)=wc_opt.'; %gán giá trị wc_opt đã được chuẩn hóa vào cột thứ k của ma trận PftCodewordsBuffer
+            PftGainBuffer(k)=array_gainpft; %lưu giá trị sau khi dùng PFT cho người dùng thứ k vào PftGainBuffer.
         end
         %% Xử lý độ lợi kênh truyền
-        Product_mxg_DFT=prod(sqrt(FCGainBuffer));
+        Product_mxg_DFT=prod(sqrt(FCGainBuffer)); %hàm prod dùng để tính tích căn bậc 2 của các phần tử của ma trận
         MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));
         Product_mxg_NC=prod(sqrt(NCGainBuffer));
         MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));
