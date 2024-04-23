@@ -3,52 +3,55 @@ clear all
 close all
 
 tic
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %1.Fun. for the MinRate&SumRate_versu_K in near-field.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%最小用户速率随用户数量增长的变化
+
 %% Thiết lập thông số mô phỏng
 N1 =64;
 N2 = 8;
 N = N1*N2; % số phần tử mảng RIS
-d = 0.5; % khoảng cách giữa các phần tử lambda/2
+d = 0.5; % khoảng cách giữa các phần tử: lambda/2
 
-%K số người dùng
+
 % K=4;
 % U=K;
-K_max=20;
+K_max=20;% số người dùng tối đa
 K_list=[2:2:K_max];
 
 % ITER là số lần lặp để tính trung bình, trong bài báo này thì ITER = 600;
-ITER = 30; lấy ít cho ra số lẹ lẹ
+ITER = 30; 
 
 A = 4;
 delta = 0.25;
 D_oversample=1;
 
-realsnr=5;
-SNR_linear = 10.^(realsnr/10.);
+realsnr=5; %tỷ lệ tín hiệu đến nhiễu (SNR - Signal-to-Noise Ratio)
+SNR_linear = 10.^(realsnr/10.); %SNR được chuyển đổi sang thang đo tuyến tính
 %% Thiết lập codebook
 disp("Gene Near and Far Codebooks……")
 % Thiết lập codebook viễn trường
 % Tính theo công thức 5a và 5b
 UN1 = exp(1i*2*pi*[0:(N1-1)*D_oversample]'*d*[0:N1-1]*(2/N1/D_oversample))/sqrt(N1);
 UN2 = exp(1i*2*pi*[0:(N2-1)*D_oversample]'*d*[0:N2-1]*(2/N2/D_oversample))/sqrt(N2);
-far_codebook = kron(UN1,UN2);
+far_codebook = kron(UN1,UN2); %Tích Kronecker giữa hai ma trận UN1⊗UN2
 
 % Tọa độ phân bố của BS và user
 P3 = [2500*d,-2500*d,1200*d,200*d,0*d,-1000*d];
 P4=P3;
 P1=P3;
 P2=P3;
-Delta = 1*[100*d,100*d,100*d,100*d,100*d,100*d];
+Delta = 1*[100*d,100*d,100*d,100*d,100*d,100*d]; %vector chứa các khoảng cách giữa người dùng và các phần tử trong mảng RIS
 Delta1 = Delta*A;
 [near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);
+%near_codebook1: Mã codebook near field cho mảng RIS .
+%record: ma trận tọa độ của các phần tử trong mảng RIS.
 near_codebook1=near_codebook1./sqrt(N);
 disp("Finish Codebooks Gene")
 
 %% Lưu số liệu tốc độ truyền ( để vẽ đồ thị )
+%Hàm zeros(n, m) được sử dụng để tạo ma trận gồm n hàng và m cột với tất cả các phần tử được khởi tạo là 0
+%length(K_list) cho biết số lượng phần tử của vector K_list, do đó số hàng sẽ bằng length(K_list), số cột là 1
 Record_SumR_FF_RIS=zeros(length(K_list),1);
 Record_SumR_NF_RIS=zeros(length(K_list),1);
 Record_SumR_FF_AP=zeros(length(K_list),1);
@@ -64,13 +67,13 @@ Record_MinR_MM=zeros(length(K_list),1);
 Record_MinR_Rand=zeros(length(K_list),1);
 
 %% Hàm chính
-t0 = clock;
+t0 = clock; %ghi lại thời điểm bắt đầu vòng lặp
 for idx_K=1:length(K_list)
     LengthK_list=length(K_list);
     num_K=K_list(idx_K);
     K=num_K;
     %% Lưu biến tạm để tính trung bình (a=a+data./ITER)
-    temp_SumR_FF_RIS=0;
+    temp_SumR_FF_RIS=0; % các biến tạm được khởi tạo với giá trị = 0
     temp_SumR_NF_RIS=0;
     temp_SumR_FF_AP=0;
     temp_SumR_NF_AP=0;
@@ -83,13 +86,14 @@ for idx_K=1:length(K_list)
     temp_MinR_NF_AP=0;
     temp_MinR_MM=0;
     temp_MinR_Rand=0;
-    %% Vòng lặp chính
+    %% Vòng lặp chính, mỗi lần lặp sẽ thực hiện một lần mô phỏng của kênh truyền từ BS tới RIS cho mỗi người dùng
     for idx_iter=1:ITER
         
-        %% Tạo kênh BS tới RIS
+        %% khởi tạo các kênh từ BS đến RIS
         FCCodewordsBuffer=zeros(N,num_K);
         NCCodewordsBuffer=zeros(N,num_K);
         PftCodewordsBuffer=zeros(N,num_K);
+        % lưu trữ các hệ số tín hiệu-tới-nhiễu (SNR) cho từng người dùng.
         FCGainBuffer=zeros(num_K,1);
         NCGainBuffer=zeros(num_K,1);
         PftGainBuffer=zeros(num_K,1);
@@ -98,52 +102,55 @@ for idx_K=1:length(K_list)
         [G,px1,py1,pz1,alpha] = generate_G_near_field_channel(N1,N2,P1);
         GG=zeros(N,num_K);
         %% Lưu thông số thời gian
+        %số lần lặp hiện tại (idx_K), tổng số lần lặp (LengthK_list), số lần lặp hiện tại trong ITER (idx_iter), tổng số lần lặp trong ITER (ITER), và thời gian đã trôi qua kể từ thời điểm bắt đầu lặp (etime(clock, t0)
         fprintf('For UserNum  (NearField):i_num=%d of %d,i_iter=%d of %d | run %.4f s\n',idx_K,LengthK_list,idx_iter,ITER,  etime(clock, t0));
         
         %% Tạo kênh truyền RIS tới người dùng
         for k=1:num_K
+            %gọi hàm để tạo kênh truyền từ RIS đến người dùng k và trả về ma trận kênh hK cùng với các thông số khác
             [hK,px2,py2,pz2,alpha] = generate_hr_near_field_channel(N1,N2,1,P2);
             %hK=hK./sqrt(N);
-            Hc = diag(hK)*G;
+            Hc = diag(hK)*G; %được tính bằng cách nhân đường chéo của ma trận hK với ma trận G, và kết quả này được gán cho cột thứ k của ma trận GG.
             GG(:,k)=Hc;           
            %% Tạo tia cận trường và viễn trường：(Get N(or F)CCodewordsBuffer、N(or F)CGainBuffer、PftGainBuffer)
             % Tạo tia viễn trường
-            [maxGainFC,idxFC]=max(abs(far_codebook*Hc).^2);
-            FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).';
+            [maxGainFC,idxFC]=max(abs(far_codebook*Hc).^2); %tính giá trị lớn nhất của module bình phương kênh truyền từ RIS tới người dùng hiện tại
+            FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).'; %lưu giá trị trên vào cột thứ k của ma trận FCCodewordsBuffer
             FCGainBuffer(k)=maxGainFC;
             
             % Tạo tia cận trường
-            array_gain = 0;
-            max_index=-1;
+            array_gain = 0; %Biến này sẽ lưu trữ giá trị lớn nhất của module bình phương kênh truyền từ RIS đến người dùng.
+            max_index=-1; %Biến này sẽ lưu trữ chỉ số của vectơ codebook trong codebook cận trường với người dùng.
             for i =1:size(near_codebook1,1)
                 if abs(near_codebook1(i,:)*Hc)^2>array_gain
                     max_index=i;
                     array_gain=abs(near_codebook1(i,:)*Hc)^2;
                 end
             end
-            NCCodewordsBuffer(:,k)=near_codebook1(max_index,:).';
-            % Tạo mã 2 lớp
+            NCCodewordsBuffer(:,k)=near_codebook1(max_index,:).'; %Gán vectơ codebook tìm được vào NCCodewordsBuffer tương ứng với người dùng hiện tại.
+            % tạo ra tọa độ vị trí của người dùng hiện tại dựa trên vectơ codebook tối ưu trong near_codebook1. Tọa độ được tính dựa trên tọa độ trung tâm và độ lệch từ vectơ codebook được chọn và các giá trị trong vectơ Delta1.
+            %Tạo ra các tọa độ theo chiều dọc của người dùng hiện tại
             P21=[record(max_index,1)+Delta1(1)/2,record(max_index,1)-Delta1(1)/2,record(max_index,2)+Delta1(2)/2,record(max_index,2)-Delta1(2)/2,record(max_index,3)+Delta1(3)/2,record(max_index,3)-Delta1(3)/2];
+            %Tạo ra các tọa độ theo chiều ngang của người dùng hiện tại
             P22=[record(max_index,4)+Delta1(4)/2,record(max_index,4)-Delta1(4)/2,record(max_index,5)+Delta1(5)/2,record(max_index,5)-Delta1(5)/2,record(max_index,6)+Delta1(6)/2,record(max_index,6)-Delta1(6)/2];
-            
+
+            %tạo ra 1 codebook cận trường thứ 2
             near_codebook2 = generate_near_field_codebook(N1,N2,d,P21,P22,Delta1*delta);
-            near_codebook2=near_codebook2./sqrt(N);
-            
+            near_codebook2=near_codebook2./sqrt(N); %chia cho căn N để chuẩn hóa        
             for i =1:size(near_codebook2,1)
                 if abs(near_codebook2(i,:)*Hc)^2>array_gain
                     array_gain=abs(near_codebook2(i,:)*Hc)^2;
                     max_index_2ndlayer(k)=i;
                 end
             end
-            if max_index_2ndlayer(k)>0 %二层码本起了作用
+            if max_index_2ndlayer(k)>0 %kiểm tra nếu chỉ số của hàng có giá trị lớn nhất trong near_codebook2 lớn hơn 0. Nếu đúng, có nghĩa là cận trường thứ hai đã được áp dụng
                 NCCodewordsBuffer(:,k)=near_codebook2(max_index_2ndlayer(k),:).';
                 maxGainNC=array_gain;
                 NCGainBuffer(k)=abs(near_codebook2(max_index_2ndlayer(k),:)*Hc)^2;
             else
                 
-                NCGainBuffer(k)=abs(NCCodewordsBuffer(:,k).'*Hc)^2;
-                
-            end%
+                NCGainBuffer(k)=abs(NCCodewordsBuffer(:,k).'*Hc)^2; %biến cho biết mức độ mạnh yếu của tín hiệu mà người dùng nhận được
+            end
             
             %Pft precoding
             wc_opt = exp(1j*phase(Hc'));%If can not work in this line maybe with different Matlab version, you can try to use "angle" function to replace "phase"
