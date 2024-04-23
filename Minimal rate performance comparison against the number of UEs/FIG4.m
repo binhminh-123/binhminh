@@ -161,7 +161,7 @@ for idx_K=1:length(K_list)
             PftGainBuffer(k)=array_gainpft; %lưu giá trị sau khi dùng PFT cho người dùng thứ k vào PftGainBuffer.
         end
         %% Xử lý độ lợi kênh truyền
-        Product_mxg_DFT=prod(sqrt(FCGainBuffer)); %hàm prod dùng để tính tích căn bậc 2 của các phần tử của ma trận
+        Product_mxg_DFT=prod(sqrt(FCGainBuffer)); %hàm prod dùng để tính tích của căn bậc 2 các phần tử của ma trận
         MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));
         Product_mxg_NC=prod(sqrt(NCGainBuffer));
         MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));
