@@ -159,7 +159,7 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
             end%
             
             %Kỹ thuật Precoding(PFT)
-            wc_opt = exp(1j*phase(Hc'));%dòng này chạy hay ko tùy phiên bản MATLAB, có thể thay hàm "góc" cho hàm "pha" %  tính toán vectơ trọng số pha tối ưu (wc_opt) dựa trên pha của kênh (Hermitian conjugate của Hc)
+            wc_opt = exp(1j*phase(Hc')); % tính toán vectơ trọng số pha tối ưu (wc_opt) dựa trên pha của kênh (Hermitian conjugate của Hc)
             wc_opt=wc_opt./abs(wc_opt)/sqrt(N); % chuẩn hóa
             array_gainpft = abs(wc_opt*Hc)^2; %  tính toán độ lợi của tín hiệu sau khi áp dụng phương pháp điều chế PFT
             PftCodewordsBuffer(:,k)=wc_opt.'; % gán vectơ trọng số pha tối ưu wc_opt vào biến PftCodewordsBuffer ở cột thứ k
@@ -207,65 +207,66 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
         G_MultiBeam_Rand=abs(MultiBeamRand.'*GG).^2; % tính toán giá trị của mảng G_MultiBeam_Rand. Nó thực hiện phép nhân tích vô hướng của vector hàng MultiBeamRand và ma trận GG, sau đó lấy giá trị tuyệt đối bình phương của kết quả.
 
         %% Thuật toán MM
-        loss3 = [];
-        eta=1;
-        v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta;
-        w3 = exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N);
+        loss3 = []; % tạo mảng lưu giá trị thất thoát (loss)
+        eta=1; % hệ số điều chỉnh vector trọng số v_abs3
+        v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta; % vector cột có kishc thước num_K x 1 với mỗi phần tử được đặt bằng giá trị lớn nhất trong dãy các giá trị bình phương của G_MultiBeam_PftSuperpose nhân với eta.
+        w3 = exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N); % vector hàng với các phần tử được khởi tạo ngẫu nhiên theo phân phối đều và được chuẩn hóa.
         
-        v_phase=exp(1j*1*pi*(2*rand(num_K,1)-1));
-        v3 = v_abs3.*v_phase;
+        v_phase=exp(1j*1*pi*(2*rand(num_K,1)-1)); % vector cột có kích thước num_K x 1, với các phần tử được khởi tạo ngẫu nhiên theo phân phối đều.
+        v3 = v_abs3.*v_phase; % vector cột có kích thước num_K x 1, kết hợp giữa v_abs3 và v_phase.
         
-        A=conj(NCCodewordsBuffer).';%dùng mã cận trường     k*n
-        A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).';%Xác định ma trận A từ code cận trường     k*n
+        A=conj(NCCodewordsBuffer).';%dùng mã cận trường k*n
+        A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).'; % ma trận có kích thước k x n (với k là số lượng người dùng và n là số lượng anten), được tạo ra từ cơ sở anten của người dùng (NCCodewordsBuffer) và điều chỉnh bởi các hệ số truyền (NCGainBuffer) cung cấp thông tin về cơ sở anten của người dùng trong mô hình kênh.
         %A=GG.';
         lambda = max(eig(A'*A));
-        max_iter=200;
+        max_iter=200; % số lần lặp tối đa
 
         % Vòng lặp
         for i=1:max_iter
-            % cập nhật hệ số pha v_phase
-            f = A*w3;
-            v_phase = exp(1j * angle(f)); % cập nhật các hệ số bổ sung
-            v3 = v_abs3 .* v_phase;
-            % cập nhật hệ số w3
-            w3_0iter=w3;
+            f = A*w3; % cập nhật hệ số pha v_phase
+            v_phase = exp(1j * angle(f)); % cập nhật các hệ số pha
+            v3 = v_abs3 .* v_phase; % cập nhật hệ số w3
+            
+            w3_0iter=w3; % sao chép giá trị của vectơ w3 vào w3_0iter để sử dụng làm giá trị khởi tạo cho việc cập nhật vectơ w3 trong quá trình lặp.
             for j_MM=1:10
                 temp = A' * v3 - A' * A * w3_0iter + lambda * w3_0iter ;
                 w3_0iter = exp( 1j*angle( temp ))/sqrt(N);
                 
             end
             w3=w3_0iter;
-            loss3 = [loss3, norm(v3 - A * w3, 2)];
+            loss3 = [loss3, norm(v3 - A * w3, 2)]; % tính toán và cập nhật giá trị của loss3, là tổng các norm 2 của sự sai khác giữa v3 và A * w3, và nó được sử dụng để theo dõi sự hội tụ của quá trình cập nhật.
         end
 
         %% tính độ lợi tia theo thuật toán MM
-        G_MultiBeam_MM=abs(w3.'*GG).^2;
-        G_MM=abs(w3.'*GG).^2;
+        G_MultiBeam_MM=abs(w3.'*GG).^2; %  tính toán giá trị của G_MultiBeam_MM, là giá trị bình phương của norm 2 của tích vô hướng giữa w3 và GG.
+        G_MM=abs(w3.'*GG).^2; % tính toán giá trị của G_MM, là giá trị bình phương của norm 2 của tích vô hướng giữa w3 và GG.
 
         %% tính tỷ lệ truyền cho từng người dùng
-        R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.');%Size K*1
-        R_NF_RIS=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose.');
-        R_FF_AP=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose_AP.');
-        R_NF_AP=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose_AP.');
-        R_MM=log2(1+SNR_linear.*G_MultiBeam_MM.');
-        R_Rand=log2(1+SNR_linear.*G_MultiBeam_Rand.');
-        
+        R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.');%Size K*1 % hiệu quả phổ của hệ thống khi sử dụng phương pháp Beamforming tại RIS (RIS BF).
+        R_NF_RIS=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose.'); % hiệu quả phổ của hệ thống khi sử dụng phương pháp Near-field Beamforming tại RIS (NF RIS).
+        R_FF_AP=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose_AP.'); % Sự hiệu quả phổ của hệ thống khi sử dụng Beamforming tại AP (AP BF).
+        R_NF_AP=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose_AP.'); % Sự hiệu quả phổ của hệ thống khi sử dụng Near-field Beamforming tại AP (NF AP).
+        R_MM=log2(1+SNR_linear.*G_MultiBeam_MM.'); % Sự hiệu quả phổ của hệ thống khi sử dụng phương pháp Multiple Measurement Vectors (MM).
+        R_Rand=log2(1+SNR_linear.*G_MultiBeam_Rand.'); % Sự hiệu quả phổ của hệ thống khi sử dụng phương pháp Random (AP BF).
+         
         %% Calculate Sum-Rate & MinRate
-        SumR_FF_RIS=sum(R_FF_RIS);
-        SumR_NF_RIS=sum(R_NF_RIS);
-        SumR_FF_AP=sum(R_FF_AP);
-        SumR_NF_AP=sum(R_NF_AP);
-        SumR_MM=sum(R_MM);
-        SumR_Rand=sum(R_Rand);
+        SumR_FF_RIS=sum(R_FF_RIS); % Tổng tỷ lệ thông tin cho RIS Beamforming.
+        SumR_NF_RIS=sum(R_NF_RIS); % Tổng tỷ lệ thông tin cho RIS Near-field Beamforming.
+        SumR_FF_AP=sum(R_FF_AP); % Tổng tỷ lệ thông tin cho AP Beamforming.
+        SumR_NF_AP=sum(R_NF_AP); % Tổng tỷ lệ thông tin cho AP Near-field Beamforming.
+        SumR_MM=sum(R_MM); % Tổng tỷ lệ thông tin cho Multiple Measurement Vectors.
+        SumR_Rand=sum(R_Rand); % Tổng tỷ lệ thông tin cho kỹ thuật ngẫu nhiên.
         
-        MinR_FF_RIS=min(R_FF_RIS);
-        MinR_NF_RIS=min(R_NF_RIS);
-        MinR_FF_AP=min(R_FF_AP);
-        MinR_NF_AP=min(R_NF_AP);
-        MinR_MM=min(R_MM);
-        MinR_Rand=min(R_Rand);
+        MinR_FF_RIS=min(R_FF_RIS); % Giá trị tối thiểu của tỷ lệ thông tin cho RIS Beamforming.
+        MinR_NF_RIS=min(R_NF_RIS); % Giá trị tối thiểu tỷ lệ thông tin cho RIS Near-field Beamforming.
+        MinR_FF_AP=min(R_FF_AP); % Giá trị tối thiểu tỷ lệ thông tin cho AP Beamforming.
+        MinR_NF_AP=min(R_NF_AP); % Giá trị tối thiểu tỷ lệ thông tin cho AP Near-field Beamforming.
+        MinR_MM=min(R_MM); % Giá trị tối thiểu tỷ lệ thông tin cho Multiple Measurement Vectors.
+        MinR_Rand=min(R_Rand); % Giá trị tối thiểu tỷ lệ thông tin cho kỹ thuật ngẫu nhiên.
 
-        
+        % Tích hợp giá trị trung bình của tỷ lệ thông tin và giá trị tối thiểu của nó qua mỗi vòng lặp của quá trình mô phỏng hoặc tính toán. 
+        % Giúp ổn định kết quả và cung cấp ước lượng trung bình của hiệu suất của từng phương pháp kết hợp sóng.
+        % Đặc biệt, việc chia cho số lượng lặp (ITER) giúp xác định giá trị trung bình dựa trên nhiều lần thử nghiệm.
         temp_SumR_FF_RIS=temp_SumR_FF_RIS+SumR_FF_RIS./ITER;
         temp_SumR_NF_RIS=temp_SumR_NF_RIS+SumR_NF_RIS./ITER;
         temp_SumR_FF_AP=temp_SumR_FF_AP+SumR_FF_AP./ITER;
