@@ -115,7 +115,7 @@ for idx_K=1:length(K_list)
            %% Tạo tia cận trường và viễn trường：(Get N(or F)CCodewordsBuffer、N(or F)CGainBuffer、PftGainBuffer)
             % Tạo tia viễn trường
             [maxGainFC,idxFC]=max(abs(far_codebook*Hc).^2); %tính giá trị lớn nhất của module bình phương kênh truyền từ RIS tới người dùng hiện tại
-            FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).'; %lưu giá trị trên vào cột thứ k của ma trận FCCodewordsBuffer
+            FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).'; %lưu giá trị trên vào cột thứ k của ma trận FCCodewordsBuffer: vector precoding được tạo ra cho kênh truyền BS đến RIS
             FCGainBuffer(k)=maxGainFC; %biến lưu giá trị maxgainFC cho người dùng thứ k
             
             % Tạo tia cận trường
@@ -127,7 +127,7 @@ for idx_K=1:length(K_list)
                     array_gain=abs(near_codebook1(i,:)*Hc)^2;
                 end
             end
-            NCCodewordsBuffer(:,k)=near_codebook1(max_index,:).'; %Gán vectơ codebook tìm được vào NCCodewordsBuffer tương ứng với người dùng hiện tại.
+            NCCodewordsBuffer(:,k)=near_codebook1(max_index,:).'; %Gán vectơ codebook tìm được vào NCCodewordsBuffer (vector precoding được tạo ra cho kênh truyền từ RIS đến người dùng)
             % tạo ra tọa độ vị trí của người dùng hiện tại dựa trên vectơ codebook tối ưu trong near_codebook1. Tọa độ được tính dựa trên tọa độ trung tâm và độ lệch từ vectơ codebook được chọn và các giá trị trong vectơ Delta1.
             %Tạo ra các tọa độ theo chiều dọc của người dùng hiện tại
             P21=[record(max_index,1)+Delta1(1)/2,record(max_index,1)-Delta1(1)/2,record(max_index,2)+Delta1(2)/2,record(max_index,2)-Delta1(2)/2,record(max_index,3)+Delta1(3)/2,record(max_index,3)-Delta1(3)/2];
@@ -147,8 +147,7 @@ for idx_K=1:length(K_list)
                 NCCodewordsBuffer(:,k)=near_codebook2(max_index_2ndlayer(k),:).';
                 maxGainNC=array_gain;
                 NCGainBuffer(k)=abs(near_codebook2(max_index_2ndlayer(k),:)*Hc)^2;
-            else
-                
+            else        
                 NCGainBuffer(k)=abs(NCCodewordsBuffer(:,k).'*Hc)^2; %biến cho biết mức độ mạnh yếu của tín hiệu mà người dùng nhận được
             end
             
@@ -157,23 +156,23 @@ for idx_K=1:length(K_list)
             wc_opt = exp(1j*phase(Hc')); %If can not work in this line maybe with different Matlab version, you can try to use "angle" function to replace "phase"
             wc_opt=wc_opt./abs(wc_opt)/sqrt(N); %chuẩn hóa ma trận trên
             array_gainpft = abs(wc_opt*Hc)^2; %cho biết mức độ mạnh yếu của tín hiệu truyền qua kênh từ RIS đến người dùng sau khi áp dụng PFT (Precoding)
-            PftCodewordsBuffer(:,k)=wc_opt.'; %gán giá trị wc_opt đã được chuẩn hóa vào cột thứ k của ma trận PftCodewordsBuffer
+            PftCodewordsBuffer(:,k)=wc_opt.'; %gán giá trị wc_opt đã được chuẩn hóa vào cột thứ k của ma trận PftCodewordsBuffer (dùng kỹ thuật PFT để để tăng cường hiệu suất truyền thông từ BS đến RIS hoặc từ RIS đến người dùng)
             PftGainBuffer(k)=array_gainpft; %lưu giá trị sau khi dùng PFT cho người dùng thứ k vào PftGainBuffer.
         end
-        %% Xử lý độ lợi kênh truyền
+        %% Xử lý độ lợi kênh truyền: tính các vector để dùng cho precoding
         Product_mxg_DFT=prod(sqrt(FCGainBuffer)); %hàm prod dùng để tính tích của căn bậc 2 các phần tử của ma trận
-        MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));
+        MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer))); %biến để lưu tín hiệu sau khi đã qua precoding
         Product_mxg_NC=prod(sqrt(NCGainBuffer));
         MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));
         Product_mxg_Pft=prod(sqrt(PftGainBuffer));
         MultiBeamPft_Orig=PftCodewordsBuffer*((Product_mxg_Pft./sqrt(PftGainBuffer)));
         %% Chồng chập tia viễn trường
         %MultiBeamFC_Orig=sum(FCCodewordsBuffer,2);
-        record_zeroFC=find(MultiBeamFC_Orig==0);
-        MultiBeamFC_Orig(record_zeroFC)=exp(1j*2*pi*rand)/sqrt(N);
-        MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N);
-        MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N);
-        %% Chồng chập tia cận trường
+        record_zeroFC=find(MultiBeamFC_Orig==0);%tìm các vị trí trong biến MultiBeamFC_Orig mà giá trị là 0.
+        MultiBeamFC_Orig(record_zeroFC)=exp(1j*2*pi*rand)/sqrt(N);%thay thế các giá trị 0 tìm được bằng một giá trị ngẫu nhiên được tạo ra từ phân phối đều trên đơn vị phức và được chuẩn hóa bởi căn bậc hai của N.
+        MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N);%chuẩn hóa các giá trị trong MultiBeamFC_Orig để tạo ra một tín hiệu với biên độ bằng 1 và được sử dụng cho RIS.
+        MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N);% %chuẩn hóa các giá trị trong MultiBeamFC_Orig để tạo ra một tín hiệu với biên độ tối đa là 1 và được sử dụng cho AP (Antenna Precoding)
+        %% Chồng chập tia cận trường (các biến được thực hiện tương tự như viễn trường)
         %MultiBeamNC_Orig=sum(NCCodewordsBuffer,2);
         record_zeroNC=find(MultiBeamNC_Orig==0);
         MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N);
@@ -183,83 +182,82 @@ for idx_K=1:length(K_list)
         %
         %% Chồng chập tia Pft ( kết hợp Tiền xử lý và Kết hợp tín hiệu vào tạo tia )
         %MultiBeamPft_Orig=sum(PftCodewordsBuffer,2);
-        record_zeroPft=find(MultiBeamPft_Orig==0);
-        MultiBeamPft_Orig(record_zeroPft)=exp(1j*2*pi*rand)/sqrt(N);
-        MultiBeamPftRIS=MultiBeamPft_Orig./abs(MultiBeamPft_Orig)/sqrt(N);
-        MultiBeamPftDig=MultiBeamPft_Orig/norm(MultiBeamPft_Orig);%Use for MM's v_abs setting
-        MultiBeamRand=exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N);
+        record_zeroPft=find(MultiBeamPft_Orig==0); %Tìm các vị trí trong MultiBeamPft_Orig mà giá trị = 0 
+        MultiBeamPft_Orig(record_zeroPft)=exp(1j*2*pi*rand)/sqrt(N); %thay các vị trí tìm được bằng các số phức ngẫu nhiên được tạo ra từ phân phối đều trên khoảng từ 0 đến 2π.
+        MultiBeamPftRIS=MultiBeamPft_Orig./abs(MultiBeamPft_Orig)/sqrt(N); %Tính toán vectơ các tia sau khi chồng chập và chi cho abs của nó để chuẩn hóa
+        MultiBeamPftDig=MultiBeamPft_Orig/norm(MultiBeamPft_Orig);%Use for MM's v_abs setting, vẫn là vecto ở trên nhưng chuẩn hóa theo độ dài của nó (norm)
+        MultiBeamRand=exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N); %Tạo vectơ tia phát ngẫu nhiên với phân phối đều và chuẩn hóa nó.
         %
         %% Tính độ lợi đa tia
-        G_MultiBeam_FFSuperpose=abs(MultiBeamFCRIS.'*GG).^2;%size:1 * K (RIS BF)
-        G_MultiBeam_NFSuperpose=abs(MultiBeamNCRIS.'*GG).^2;%(RIS BF)
-        G_MultiBeam_PftSuperpose=abs(MultiBeamPftDig.'*GG).^2;%(Dig BF)
-        G_MultiBeam_FFSuperpose_AP=abs(MultiBeamFCAP.'*GG).^2;%size:1 * K (AP BF)
-        G_MultiBeam_NFSuperpose_AP=abs(MultiBeamNCAP.'*GG).^2;%(AP BF)
-        G_MultiBeam_Rand=abs(MultiBeamRand.'*GG).^2;%(AP BF)
+        G_MultiBeam_FFSuperpose=abs(MultiBeamFCRIS.'*GG).^2;%size:1 * K (RIS BF), độ lợi đa tia cho far field khi sử dụng kỹ thuật beamforming dựa trên tín hiệu từ RIS
+        G_MultiBeam_NFSuperpose=abs(MultiBeamNCRIS.'*GG).^2;%(RIS BF), như trên nhưng cho near field
+        G_MultiBeam_PftSuperpose=abs(MultiBeamPftDig.'*GG).^2;%(Dig BF), sử dụng thêm phương pháp pft vào
+        G_MultiBeam_FFSuperpose_AP=abs(MultiBeamFCAP.'*GG).^2;%size:1 * K (AP BF), như trên nhưng dựa vào tín hiệu từ RIS và AP
+        G_MultiBeam_NFSuperpose_AP=abs(MultiBeamNCAP.'*GG).^2;%(AP BF), như trên nhưng cho near field
+        G_MultiBeam_Rand=abs(MultiBeamRand.'*GG).^2;%(AP BF), dựa theo tín hiệu được phát sóng ngẫu nhiên
 
         %% Thuật toán MM
-        loss3 = [];
+        loss3 = [];% mảng để lưu trữ giá trị của hàm suy hao trong quá trình tối ưu hoá.
         eta=1;
-        v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta;
-        w3 = exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N);
+        v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta; %vector amplitude của tín hiệu truyền đi v_abs3 dựa trên giá trị lớn nhất của độ lợi đa tia từ PFT và nhân với hệ số eta.
+        w3 = exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N);%vector trọng số của RIS được khởi tạo ngẫu nhiên.
         
-        v_phase=exp(1j*1*pi*(2*rand(num_K,1)-1));
+        v_phase=exp(1j*1*pi*(2*rand(num_K,1)-1));%vector pha của RIS được khởi tạo ngẫu nhiên
         v3 = v_abs3.*v_phase;
         
-        A=conj(NCCodewordsBuffer).';%根据近场码本确定A     k*n
-        A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).';%根据近场码本确定A     k*n
+        A=conj(NCCodewordsBuffer).';% ma trận chuyển vị liên hợp của ma trận codebook cận trường
+        A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).';% nhân ma trận trên với ma trận đường chéo có các phần tử là căn bậc 2 của NCGainBuffer
                 
         %A=GG.';
-        lambda = max(eig(A'*A));
-        max_iter=200;
+        lambda = max(eig(A'*A));%tính giá trị lớn nhất của giá trị riêng của ma trận A'*A
+        max_iter=200; %số lần lặp tối đa
         % Vòng lặp
         for i=1:max_iter
             % update v_phase
             f = A*w3;
-            v_phase = exp(1j * angle(f)); % cập nhật biến phụ
+            v_phase = exp(1j * angle(f)); % cập nhật biến phụ bằng cách lấy góc của phần thực của ma trận f.
             v3 = v_abs3 .* v_phase;
             % cập nhật thông số w3
             w3_0iter=w3;
             for j_MM=1:10
-                temp = A' * v3 - A' * A * w3_0iter + lambda * w3_0iter ;
-                w3_0iter = exp( 1j*angle( temp ))/sqrt(N);
-                
+                temp = A' * v3 - A' * A * w3_0iter + lambda * w3_0iter ;% tính biến tạm
+                w3_0iter = exp( 1j*angle( temp ))/sqrt(N);  
             end
             w3=w3_0iter;
             loss3 = [loss3, norm(v3 - A * w3, 2)];
         end
         %% Tính độ lợi đa tia bằng MM
-        G_MultiBeam_MM=abs(w3.'*GG).^2;
-        G_MM=abs(w3.'*GG).^2;
+        G_MultiBeam_MM=abs(w3.'*GG).^2; %công suất tín hiệu thu được tại các người dùng khi sử dụng phương pháp MM
+        G_MM=abs(w3.'*GG).^2;%giống cái trên
         %% Tính tốc độ truyền cho từng người dùng
-        R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.');%Size K*1
-        R_NF_RIS=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose.');
-        R_FF_AP=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose_AP.');
-        R_NF_AP=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose_AP.');
-        R_MM=log2(1+SNR_linear.*G_MultiBeam_MM.');
-        R_Rand=log2(1+SNR_linear.*G_MultiBeam_Rand.');
-        %% Tổng tốc độ truyền & Tốc độ truyền tối thiểu
+        R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.');%Size K*1 % khi sử dụng beamforming RIS viễn trường
+        R_NF_RIS=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose.');% khi sử dụng beamforming RIS cận trường
+        R_FF_AP=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose_AP.');%khi sử dụng beamforming AP viễn trường
+        R_NF_AP=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose_AP.');%khi sử dụng beamforming AP cận trường
+        R_MM=log2(1+SNR_linear.*G_MultiBeam_MM.');% khi sử dụng thuật toán MM
+        R_Rand=log2(1+SNR_linear.*G_MultiBeam_Rand.');% khi dùng độ lợi ngẫu nhiên
+        %% Tổng tốc độ truyền 
         SumR_FF_RIS=sum(R_FF_RIS);
         SumR_NF_RIS=sum(R_NF_RIS);
         SumR_FF_AP=sum(R_FF_AP);
         SumR_NF_AP=sum(R_NF_AP);
         SumR_MM=sum(R_MM);
         SumR_Rand=sum(R_Rand);
-        
+        %Tốc độ truyền tối thiểu
         MinR_FF_RIS=min(R_FF_RIS);
         MinR_NF_RIS=min(R_NF_RIS);
         MinR_FF_AP=min(R_FF_AP);
         MinR_NF_AP=min(R_NF_AP);
         MinR_MM=min(R_MM);
         MinR_Rand=min(R_Rand);
-        
+        % tổng trung bình của tốc độ truyền cho từng trường hợp (FF_RIS, NF_RIS, FF_AP, NF_AP, MM, và Random) qua các lần lặp
         temp_SumR_FF_RIS=temp_SumR_FF_RIS+SumR_FF_RIS./ITER;
         temp_SumR_NF_RIS=temp_SumR_NF_RIS+SumR_NF_RIS./ITER;
         temp_SumR_FF_AP=temp_SumR_FF_AP+SumR_FF_AP./ITER;
         temp_SumR_NF_AP=temp_SumR_NF_AP+SumR_NF_AP./ITER;
         temp_SumR_MM=temp_SumR_MM+SumR_MM./ITER;
         temp_SumR_Rand=temp_SumR_Rand+SumR_Rand./ITER;
-        
+        % tính giá trị trung bình của tốc độ truyền tối thiểu cho từng trường hợp qua các lần lặp
         temp_MinR_FF_RIS=temp_MinR_FF_RIS+MinR_FF_RIS./ITER;
         temp_MinR_NF_RIS=temp_MinR_NF_RIS+MinR_NF_RIS./ITER;
         temp_MinR_FF_AP=temp_MinR_FF_AP+MinR_FF_AP./ITER;
@@ -268,7 +266,7 @@ for idx_K=1:length(K_list)
         temp_MinR_Rand=temp_MinR_Rand+MinR_Rand./ITER;
         
     end
-    %% Lưu giá trị tốc độ sau khi kết thúc vòng lặp
+    %% Lưu các giá trị tốc độ sau khi kết thúc vòng lặp
     Record_SumR_FF_RIS(idx_K)=temp_SumR_FF_RIS;
     Record_SumR_NF_RIS(idx_K)=temp_SumR_NF_RIS;
     Record_SumR_FF_AP(idx_K)=temp_SumR_FF_AP;
@@ -288,6 +286,8 @@ end
 xx=K_list;
 
 %% Lưu file thông số
+%Các lệnh save này tạo ra các file .mat chứa các biến và cấu trúc dữ liệu tương ứng, với định dạng nén -v7.3 để hỗ trợ việc lưu trữ dữ liệu lớn. 
+%hàm strcat để nối các chuỗi lại với nhau
 filename   =   strcat('xx',   '.mat');
 save(['./',filename],    'xx','-v7.3');
 
@@ -326,11 +326,11 @@ save(['./',filename],    'Record_MinR_MM','-v7.3');
 
 filename   =   strcat('Record_MinR_Rand',   '.mat');
 save(['./',filename],    'Record_MinR_Rand','-v7.3');
-%% Mì ăn liền,
+
 %Nếu muốn xuất ra đồ thị liền thì bỏ comment rồi chạy section này tới hết code
 %Từ đây tới hết code.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %%%Just Remove the comment of the following  lines, Run from this line to the end of this code
+
 %load('xx.mat');
 %load('Record_MinR_FF_RIS.mat');
 %load('Record_MinR_NF_RIS.mat');
