@@ -4,7 +4,7 @@ close all
 
 tic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%1.Fun. for the MinRate&SumRate_versu_K in near-field.
+%mô phỏng so sánh tỷ lệ truyền tối thiểu với số lượng người dùng
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Thiết lập thông số mô phỏng
