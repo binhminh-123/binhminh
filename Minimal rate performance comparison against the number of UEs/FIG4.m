@@ -24,7 +24,7 @@ ITER = 30;
 
 A = 4;
 delta = 0.25;  %khoảng cách giữa các nút lưới codebook
-D_oversample=1;
+D_oversample=1; %biến điều chỉnh khoảng phân bố các điểm lưới trong không gian của codebook
 
 realsnr=5; %tỷ lệ tín hiệu đến nhiễu (SNR - Signal-to-Noise Ratio)
 SNR_linear = 10.^(realsnr/10.); %SNR được chuyển đổi sang thang đo tuyến tính
