@@ -8,8 +8,8 @@ tic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Thiết lập thông số mô phỏng
-N1 =64;
-N2 = 8;
+N1 =64; %số hàng của mảng phản xạ
+N2 = 8; %số cột của mảng phản xạ
 N = N1*N2; % số phần tử mảng RIS
 d = 0.5; % khoảng cách giữa các phần tử: lambda/2
 
@@ -42,11 +42,9 @@ P4=P3;
 P1=P3;
 P2=P3;
 Delta = 1*[100*d,100*d,100*d,100*d,100*d,100*d]; %vector chứa các khoảng cách giữa người dùng và các phần tử trong mảng RIS
-Delta1 = Delta*A;
-[near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);
-%near_codebook1: Mã codebook near field cho mảng RIS .
-%record: ma trận tọa độ của các phần tử trong mảng RIS.
-near_codebook1=near_codebook1./sqrt(N);
+Delta1 = Delta*A; % nhân các giá trị vector Delta với giá trị A tạo ra vector Delta1 có thể điều chỉnh khoảng cách giữa các phần tử trong codebook cận trường.
+[near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);%near_codebook1: Mã codebook near field cho mảng RIS; record: ma trận tọa độ của các phần tử trong mảng RIS.
+near_codebook1=near_codebook1./sqrt(N); %chuẩn hóa
 disp("Finish Codebooks Gene")
 
 %% Lưu số liệu tốc độ truyền ( để vẽ đồ thị )
@@ -72,31 +70,31 @@ for idx_K=1:length(K_list)
     LengthK_list=length(K_list);
     num_K=K_list(idx_K);
     K=num_K;
-    %% Lưu biến tạm để tính trung bình (a=a+data./ITER)
-    temp_SumR_FF_RIS=0; % các biến tạm được khởi tạo với giá trị = 0
-    temp_SumR_NF_RIS=0;
-    temp_SumR_FF_AP=0;
-    temp_SumR_NF_AP=0;
-    temp_SumR_MM=0;
-    temp_SumR_Rand=0;
+    %% Lưu biến tạm để tính trung bình (a=a+data./ITER), các biến tạm được khởi tạo với giá trị = 0
+    temp_SumR_FF_RIS=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình RIS với thiết kế tia viễn trường
+    temp_SumR_NF_RIS=0; %biến tạm đểtính tổng tỷ lệ truyền của mô hình RIS với thiết kế tia cận trường
+    temp_SumR_FF_AP=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình AP với thiết kế tia viễn trường
+    temp_SumR_NF_AP=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình AP với thiết kế tia cận trường
+    temp_SumR_MM=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình MM
+    temp_SumR_Rand=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình với thiết kế tia ngẫu nhiên
     
-    temp_MinR_FF_RIS=0;
-    temp_MinR_NF_RIS=0;
-    temp_MinR_FF_AP=0;
-    temp_MinR_NF_AP=0;
-    temp_MinR_MM=0;
-    temp_MinR_Rand=0;
+    temp_MinR_FF_RIS=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
+    temp_MinR_NF_RIS=0; %biến tạm đểtính tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
+    temp_MinR_FF_AP=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
+    temp_MinR_NF_AP=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
+    temp_MinR_MM=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình MM
+    temp_MinR_Rand=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
     %% Vòng lặp chính, mỗi lần lặp sẽ thực hiện một lần mô phỏng của kênh truyền từ BS tới RIS cho mỗi người dùng
     for idx_iter=1:ITER
         
         %% khởi tạo các kênh từ BS đến RIS
-        FCCodewordsBuffer=zeros(N,num_K);
-        NCCodewordsBuffer=zeros(N,num_K);
-        PftCodewordsBuffer=zeros(N,num_K);
+        FCCodewordsBuffer=zeros(N,num_K); %lưu mã truyền viễn trường
+        NCCodewordsBuffer=zeros(N,num_K); %lưu mã truyền cận trường
+        PftCodewordsBuffer=zeros(N,num_K); %lưu mã truyền tia precoding
         % lưu trữ các hệ số tín hiệu-tới-nhiễu (SNR) cho từng người dùng.
-        FCGainBuffer=zeros(num_K,1);
-        NCGainBuffer=zeros(num_K,1);
-        PftGainBuffer=zeros(num_K,1);
+        FCGainBuffer=zeros(num_K,1); %vector lưu độ lợi viễn trường
+        NCGainBuffer=zeros(num_K,1); %vector lưu độ lợi cận trường
+        PftGainBuffer=zeros(num_K,1); %vector lưu độ lợi kênh precoding
         max_index_2ndlayer=zeros(num_K,1);
         % Tạo kênh truyền BS tới RIS
         [G,px1,py1,pz1,alpha] = generate_G_near_field_channel(N1,N2,P1);
