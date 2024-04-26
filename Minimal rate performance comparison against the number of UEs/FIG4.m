@@ -50,19 +50,19 @@ disp("Finish Codebooks Gene")
 %% Lưu số liệu tốc độ truyền ( để vẽ đồ thị )
 %Hàm zeros(n, m) được sử dụng để tạo ma trận gồm n hàng và m cột với tất cả các phần tử được khởi tạo là 0
 %length(K_list) cho biết số lượng phần tử của vector K_list, do đó số hàng sẽ bằng length(K_list), số cột là 1
-Record_SumR_FF_RIS=zeros(length(K_list),1);
-Record_SumR_NF_RIS=zeros(length(K_list),1);
-Record_SumR_FF_AP=zeros(length(K_list),1);
-Record_SumR_NF_AP=zeros(length(K_list),1);
-Record_SumR_MM=zeros(length(K_list),1);
-Record_SumR_Rand=zeros(length(K_list),1);
+Record_SumR_FF_RIS=zeros(length(K_list),1); %khởi tạo ma trận lưu tổng tốc độ truyền cho far field RIS
+Record_SumR_NF_RIS=zeros(length(K_list),1); %khởi tạo ma trận lưu tổng tốc độ truyền cho near field RIS
+Record_SumR_FF_AP=zeros(length(K_list),1); %khởi tạo ma trận lưu tổng tốc độ truyền cho mô hình AP far field
+Record_SumR_NF_AP=zeros(length(K_list),1); %khởi tạo ma trận lưu tổng tốc độ truyền cho mô hình AP near field
+Record_SumR_MM=zeros(length(K_list),1); %khởi tạo ma trận lưu tổng tốc độ truyền MM
+Record_SumR_Rand=zeros(length(K_list),1); %khởi tạo ma trận lưu tổng tốc độ truyền cho thiết kế tia ngẫu nhiên
 
-Record_MinR_FF_RIS=zeros(length(K_list),1);
-Record_MinR_NF_RIS=zeros(length(K_list),1);
-Record_MinR_FF_AP=zeros(length(K_list),1);
-Record_MinR_NF_AP=zeros(length(K_list),1);
-Record_MinR_MM=zeros(length(K_list),1);
-Record_MinR_Rand=zeros(length(K_list),1);
+Record_MinR_FF_RIS=zeros(length(K_list),1); %khởi tạo ma trận lưu tốc độ truyền tối thiểu cho far field RIS
+Record_MinR_NF_RIS=zeros(length(K_list),1); %khởi tạo ma trận lưu tốc độ truyền tối thiểu cho near field RIS
+Record_MinR_FF_AP=zeros(length(K_list),1); %khởi tạo ma trận lưu tốc độ truyền tối thiểu cho mô hình AP far field
+Record_MinR_NF_AP=zeros(length(K_list),1); %khởi tạo ma trận lưu tốc độ truyền tối thiểu cho mô hình AP near field
+Record_MinR_MM=zeros(length(K_list),1); %khởi tạo ma trận lưu tốc độ truyền tối thiểu cho mô hình MM
+Record_MinR_Rand=zeros(length(K_list),1); %khởi tạo ma trận lưu tốc độ truyền tối thiểu cho thiết kế tia ngẫu nhiên
 
 %% Hàm chính
 t0 = clock; %ghi lại thời điểm bắt đầu vòng lặp
@@ -71,19 +71,19 @@ for idx_K=1:length(K_list)
     num_K=K_list(idx_K);
     K=num_K;
     %% Lưu biến tạm để tính trung bình (a=a+data./ITER), các biến tạm được khởi tạo với giá trị = 0
-    temp_SumR_FF_RIS=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình RIS với thiết kế tia viễn trường
-    temp_SumR_NF_RIS=0; %biến tạm đểtính tổng tỷ lệ truyền của mô hình RIS với thiết kế tia cận trường
-    temp_SumR_FF_AP=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình AP với thiết kế tia viễn trường
-    temp_SumR_NF_AP=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình AP với thiết kế tia cận trường
-    temp_SumR_MM=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình MM
-    temp_SumR_Rand=0; %biến tạm để tính tổng tỷ lệ truyền của mô hình với thiết kế tia ngẫu nhiên
+    temp_SumR_FF_RIS=0; %biến tạm để tính tổng tốc độ truyền của mô hình RIS với thiết kế tia viễn trường
+    temp_SumR_NF_RIS=0; %biến tạm đểtính tổng tốc độ truyền của mô hình RIS với thiết kế tia cận trường
+    temp_SumR_FF_AP=0; %biến tạm để tính tổng tốc độ truyền của mô hình AP với thiết kế tia viễn trường
+    temp_SumR_NF_AP=0; %biến tạm để tính tổng tốc độ truyền của mô hình AP với thiết kế tia cận trường
+    temp_SumR_MM=0; %biến tạm để tính tổng tốc độ truyền của mô hình MM
+    temp_SumR_Rand=0; %biến tạm để tính tổng tốc độ truyền của mô hình với thiết kế tia ngẫu nhiên
     
-    temp_MinR_FF_RIS=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
-    temp_MinR_NF_RIS=0; %biến tạm đểtính tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
-    temp_MinR_FF_AP=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
-    temp_MinR_NF_AP=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
-    temp_MinR_MM=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình MM
-    temp_MinR_Rand=0; %biến tạm để tính tỷ lệ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
+    temp_MinR_FF_RIS=0; %biến tạm để tính tốc độ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
+    temp_MinR_NF_RIS=0; %biến tạm đểtính tốc độ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
+    temp_MinR_FF_AP=0; %biến tạm để tính tốc độ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
+    temp_MinR_NF_AP=0; %biến tạm để tính tốc độ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
+    temp_MinR_MM=0; %biến tạm để tính tốc độ truyền tối thiểu của mô hình MM
+    temp_MinR_Rand=0; %biến tạm để tính tốc độ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
     %% Vòng lặp chính, mỗi lần lặp sẽ thực hiện một lần mô phỏng của kênh truyền từ BS tới RIS cho mỗi người dùng
     for idx_iter=1:ITER
         
