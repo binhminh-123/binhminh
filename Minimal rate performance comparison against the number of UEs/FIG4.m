@@ -23,7 +23,7 @@ K_list=[2:2:K_max];
 ITER = 30; 
 
 A = 4;
-delta = 0.25;
+delta = 0.25;  %khoảng cách giữa các nút lưới codebook
 D_oversample=1;
 
 realsnr=5; %tỷ lệ tín hiệu đến nhiễu (SNR - Signal-to-Noise Ratio)
