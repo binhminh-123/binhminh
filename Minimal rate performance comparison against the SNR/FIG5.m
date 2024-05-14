@@ -3,7 +3,7 @@ clear all
 close all
 tic %bắt đầu tính thời gian chạy của code
 
-%Mô phỏng so sánh tỷ lệ truyền tối thiểu với SNR
+%Mô phỏng so sánh tốc độ truyền tối thiểu với SNR
 
 %% Cấu hình thông số mô phỏng
 N1 =64; %số hàng của mảng phản xạ
@@ -47,20 +47,20 @@ Delta1 = Delta*A; % nhân các giá trị vector Delta với giá trị A tạo 
 near_codebook1=near_codebook1./sqrt(N); % chuẩn hóa bằng chia căn bậc 2 N
 disp("Finish Codebooks Gene")
 
-%% Lưu thông số tỷ lệ truyền để vẽ đồ thị
-Record_SumR_FF_RIS=zeros(length(Bigfor_list),1); %lưu tổng tỷ lệ truyền của mô hình RIS với thiết kế tia viễn trường
-Record_SumR_NF_RIS=zeros(length(Bigfor_list),1); %lưu tổng tỷ lệ truyền của mô hình RIS với thiết kế tia cận trường
-Record_SumR_FF_AP=zeros(length(Bigfor_list),1); %lưu tổng tỷ lệ truyền của mô hình AP với thiết kế tia viễn trường
-Record_SumR_NF_AP=zeros(length(Bigfor_list),1); %lưu tổng tỷ lệ truyền của mô hình AP với thiết kế tia cận trường
-Record_SumR_MM=zeros(length(Bigfor_list),1); %lưu tổng tỷ lệ truyền của mô hình MM
-Record_SumR_Rand=zeros(length(Bigfor_list),1); %lưu tổng tỷ lệ truyền của mô hình với thiết kế tia ngẫu nhiên
+%% Lưu thông số tốc độ truyền để vẽ đồ thị
+Record_SumR_FF_RIS=zeros(length(Bigfor_list),1); %lưu giá trị trung bình cộng tốc độ truyền của mô hình RIS với thiết kế tia viễn trường
+Record_SumR_NF_RIS=zeros(length(Bigfor_list),1); %lưu giá trị trung bình cộng tốc độ truyền của mô hình RIS với thiết kế tia cận trường
+Record_SumR_FF_AP=zeros(length(Bigfor_list),1); %lưu giá trị trung bình cộng tốc độ truyền của mô hình AP với thiết kế tia viễn trường
+Record_SumR_NF_AP=zeros(length(Bigfor_list),1); %lưu giá trị trung bình cộng tốc độ truyền của mô hình AP với thiết kế tia cận trường
+Record_SumR_MM=zeros(length(Bigfor_list),1); %lưu giá trị trung bình cộng tốc độ truyền của mô hình MM
+Record_SumR_Rand=zeros(length(Bigfor_list),1); %lưu giá trị trung bình cộng tốc độ truyền của mô hình với thiết kế tia ngẫu nhiên
 
-Record_MinR_FF_RIS=zeros(length(Bigfor_list),1); %lưu tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
-Record_MinR_NF_RIS=zeros(length(Bigfor_list),1); %lưu tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
-Record_MinR_FF_AP=zeros(length(Bigfor_list),1); %lưu tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
-Record_MinR_NF_AP=zeros(length(Bigfor_list),1); %lưu tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
-Record_MinR_MM=zeros(length(Bigfor_list),1); %lưu tỷ lệ truyền tối thiểu của mô hình MM
-Record_MinR_Rand=zeros(length(Bigfor_list),1); %lưu tỷ lệ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
+Record_MinR_FF_RIS=zeros(length(Bigfor_list),1); %lưu tốc độ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
+Record_MinR_NF_RIS=zeros(length(Bigfor_list),1); %lưu tốc độ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
+Record_MinR_FF_AP=zeros(length(Bigfor_list),1); %lưu tốc độ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
+Record_MinR_NF_AP=zeros(length(Bigfor_list),1); %lưu tốc độ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
+Record_MinR_MM=zeros(length(Bigfor_list),1); %lưu tốc độ truyền tối thiểu của mô hình MM
+Record_MinR_Rand=zeros(length(Bigfor_list),1); %lưu tốc độ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
 
 
 %% Hàm chính
@@ -73,20 +73,20 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
     SNR_linear = 10.^(Bigfor_list(idx_Bigfor)/10.); %Thay đổi giá trị SNR từ giai dB sang tuyến tính
 
     %% Lưu bộ đệm để tính trung bình (a=a+data./ITER)
-    temp_SumR_FF_RIS=0;%biến tạm để tính tổng tỷ lệ truyền của mô hình RIS với thiết kế tia viễn trường
-    temp_SumR_NF_RIS=0;%biến tạm đểtính tổng tỷ lệ truyền của mô hình RIS với thiết kế tia cận trường
-    temp_SumR_FF_AP=0;%biến tạm để tính tổng tỷ lệ truyền của mô hình AP với thiết kế tia viễn trường
-    temp_SumR_NF_AP=0;%biến tạm để tính tổng tỷ lệ truyền của mô hình AP với thiết kế tia cận trường
-    temp_SumR_MM=0;%biến tạm để tính tổng tỷ lệ truyền của mô hình MM
-    temp_SumR_Rand=0;%biến tạm để tính tổng tỷ lệ truyền của mô hình với thiết kế tia ngẫu nhiên
+    temp_SumR_FF_RIS=0;%biến tạm để tính giá trị trung bình cộng tốc độ truyền của mô hình RIS với thiết kế tia viễn trường
+    temp_SumR_NF_RIS=0;%biến tạm đểtính giá trị trung bình cộng tốc độ truyền của mô hình RIS với thiết kế tia cận trường
+    temp_SumR_FF_AP=0;%biến tạm để tính giá trị trung bình cộng tốc độ truyền của mô hình AP với thiết kế tia viễn trường
+    temp_SumR_NF_AP=0;%biến tạm để tính giá trị trung bình cộng tốc độ truyền của mô hình AP với thiết kế tia cận trường
+    temp_SumR_MM=0;%biến tạm để tính giá trị trung bình cộng tốc độ truyền của mô hình MM
+    temp_SumR_Rand=0;%biến tạm để tính giá trị trung bình cộng tốc độ truyền của mô hình với thiết kế tia ngẫu nhiên
 
     
-    temp_MinR_FF_RIS=0;%biến tạm để tính tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
-    temp_MinR_NF_RIS=0;%biến tạm đểtính tỷ lệ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
-    temp_MinR_FF_AP=0;%biến tạm để tính tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
-    temp_MinR_NF_AP=0;%biến tạm để tính tỷ lệ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
-    temp_MinR_MM=0;%biến tạm để tính tỷ lệ truyền tối thiểu của mô hình MM
-    temp_MinR_Rand=0;%biến tạm để tính tỷ lệ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
+    temp_MinR_FF_RIS=0;%biến tạm để tính tốc độ truyền tối thiểu của mô hình RIS với thiết kế tia viễn trường
+    temp_MinR_NF_RIS=0;%biến tạm đểtính tốc độ truyền tối thiểu của mô hình RIS với thiết kế tia cận trường
+    temp_MinR_FF_AP=0;%biến tạm để tính tốc độ truyền tối thiểu của mô hình AP với thiết kế tia viễn trường
+    temp_MinR_NF_AP=0;%biến tạm để tính tốc độ truyền tối thiểu của mô hình AP với thiết kế tia cận trường
+    temp_MinR_MM=0;%biến tạm để tính tốc độ truyền tối thiểu của mô hình MM
+    temp_MinR_Rand=0;%biến tạm để tính tốc độ truyền tối thiểu của mô hình với thiết kế tia ngẫu nhiên
 
     %% Vòng lặp chính
     parfor idx_iter=1:ITER
@@ -175,14 +175,14 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
         MultiBeamPft_Orig=PftCodewordsBuffer*((Product_mxg_Pft./sqrt(PftGainBuffer))); % kết quả cuối cùng của vectơ trọng số cho phương pháp PFT
 
         %% Điều chỉnh vectơ trọng số cuối cùng cho phương pháp FC để đảm bảo rằng không có trọng số nào bằng 0
-        %MultiBeamFC_Orig=sum(FCCodewordsBuffer,2); % tính tổng của các vectơ trong FCCodewordsBuffer theo chiều cột, lưu kết quả vào MultiBeamFC_Orig
+        %MultiBeamFC_Orig=sum(FCCodewordsBuffer,2); % tính giá trị trung bình cộng của các vectơ trong FCCodewordsBuffer theo chiều cột, lưu kết quả vào MultiBeamFC_Orig
         record_zeroFC=find(MultiBeamFC_Orig==0); % tìm các vị trí trong MultiBeamFC_Orig mà có giá trị bằng 0 và lưu các chỉ mục đó vào mảng record_zeroFC
         MultiBeamFC_Orig(record_zeroFC)=exp(1j*2*pi*rand)/sqrt(N); %  thay thế các giá trị trong MultiBeamFC_Orig tại các vị trí có giá trị bằng 0 bằng một giá trị phức ngẫu nhiên được tạo ra từ hàm rand, sau đó chia cho căn bậc hai của N
         MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N); % tạo ra một vectơ mới MultiBeamFCRIS bằng cách chia MultiBeamFC_Orig cho giá trị tuyệt đối của nó, sau đó chia kết quả cho căn bậc hai của N. Quá trình này làm cho vectơ MultiBeamFCRIS có các phần tử có độ lớn bằng 1 và được chuẩn hóa theo căn bậc hai của N
         MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N); % tạo ra một vectơ mới MultiBeamFCAP bằng cách chia MultiBeamFC_Orig cho giá trị tuyệt đối lớn nhất của nó, sau đó chia kết quả cho căn bậc hai của N. Quá trình này chuẩn hóa các phần tử của MultiBeamFC_Orig sao cho phần tử lớn nhất có độ lớn bằng 1, và sau đó chuẩn hóa kết quả theo căn bậc hai của N
 
         %% Chồng chập tia cận trường
-        %MultiBeamNC_Orig=sum(NCCodewordsBuffer,2); % tính tổng của các cột trong ma trận NCCodewordsBuffer và lưu kết quả vào vectơ MultiBeamNC_Orig.
+        %MultiBeamNC_Orig=sum(NCCodewordsBuffer,2); % tính giá trị trung bình cộng của các cột trong ma trận NCCodewordsBuffer và lưu kết quả vào vectơ MultiBeamNC_Orig.
         record_zeroNC=find(MultiBeamNC_Orig==0); % tìm các vị trí trong vectơ MultiBeamNC_Orig có giá trị bằng 0 và lưu các vị trí đó vào vectơ record_zeroNC.
         MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N); % thay thế các giá trị 0 trong vectơ MultiBeamNC_Orig bằng một số phức ngẫu nhiên có độ lớn là 1 và góc pha ngẫu nhiên được chọn từ phạm vi từ 0 đến 2π để tránh chia cho 0 trong quá trình chuẩn hóa và tính toán về sau.
         MultiBeamNCRIS=MultiBeamNC_Orig./abs(MultiBeamNC_Orig)/sqrt(N); % chuẩn hóa vectơ MultiBeamNC_Orig bằng cách chia cho độ lớn tuyệt đối của nó, sau đó chia cho căn bậc hai của độ lớn N
@@ -190,7 +190,7 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
         MultiBeamNCAP=MultiBeamNC_Orig./max(abs(MultiBeamNC_Orig))/sqrt(N);%Có thể thay đổi hệ số Biên độ và Pha. (Biên độ chạy trong khoảng [0,1])
         %
         %% Chồng chập tia Pft-BF ( kết hợp Precoding và Combining vào tạo tia )
-        %MultiBeamPft_Orig=sum(PftCodewordsBuffer,2); %  tính tổng các cột của ma trận PftCodewordsBuffer, tạo ra vectơ MultiBeamPft_Orig.
+        %MultiBeamPft_Orig=sum(PftCodewordsBuffer,2); %  tính giá trị trung bình cộng các cột của ma trận PftCodewordsBuffer, tạo ra vectơ MultiBeamPft_Orig.
         record_zeroPft=find(MultiBeamPft_Orig==0); % tìm các vị trí trong MultiBeamPft_Orig có giá trị bằng 0 và lưu các vị trí đó vào mảng record_zeroPft.
         MultiBeamPft_Orig(record_zeroPft)=exp(1j*2*pi*rand)/sqrt(N); % thay thế các giá trị trong MultiBeamPft_Orig tại các vị trí có giá trị bằng 0 bằng một giá trị ngẫu nhiên phức tạp được tính dựa trên hàm rand (chọn một số ngẫu nhiên từ phân phối đều trong khoảng từ 0 đến 1), sau đó chia cho căn bậc hai của N
         MultiBeamPftRIS=MultiBeamPft_Orig./abs(MultiBeamPft_Orig)/sqrt(N); % tính toán MultiBeamPftRIS bằng cách chia MultiBeamPft_Orig cho giá trị tuyệt đối của nó, sau đó chia cho căn bậc hai của N, chuẩn hóa vector MultiBeamPft_Orig và đưa về cùng một phạm vi với các giá trị nằm trong khoảng từ 0 đến 1.
@@ -234,14 +234,14 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
                 
             end
             w3=w3_0iter;
-            loss3 = [loss3, norm(v3 - A * w3, 2)]; % tính toán và cập nhật giá trị của loss3, là tổng các norm 2 của sự sai khác giữa v3 và A * w3, và nó được sử dụng để theo dõi sự hội tụ của quá trình cập nhật.
+            loss3 = [loss3, norm(v3 - A * w3, 2)]; % tính toán và cập nhật giá trị của loss3, là giá trị trung bình cộng các norm 2 của sự sai khác giữa v3 và A * w3, và nó được sử dụng để theo dõi sự hội tụ của quá trình cập nhật.
         end
 
         %% tính độ lợi tia theo thuật toán MM
         G_MultiBeam_MM=abs(w3.'*GG).^2; %  tính toán giá trị của G_MultiBeam_MM, là giá trị bình phương của norm 2 của tích vô hướng giữa w3 và GG.
         G_MM=abs(w3.'*GG).^2; % tính toán giá trị của G_MM, là giá trị bình phương của norm 2 của tích vô hướng giữa w3 và GG.
 
-        %% tính tỷ lệ truyền cho từng người dùng
+        %% tính tốc độ truyền cho từng người dùng
         R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.');%Size K*1 % hiệu quả phổ của hệ thống khi sử dụng phương pháp Beamforming tại RIS (RIS BF).
         R_NF_RIS=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose.'); % hiệu quả phổ của hệ thống khi sử dụng phương pháp Near-field Beamforming tại RIS (NF RIS).
         R_FF_AP=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose_AP.'); % Sự hiệu quả phổ của hệ thống khi sử dụng Beamforming tại AP (AP BF).
