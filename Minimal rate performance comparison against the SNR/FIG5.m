@@ -91,7 +91,7 @@ for idx_Bigfor=1:length(Bigfor_list) % bắt đầu vòng lặp qua các giá tr
     %% Vòng lặp chính
     parfor idx_iter=1:ITER
         
-        %% Tạo kênh truyền từ BS tới RIS
+        %% Tạo ma trận lưu các giá trị mã và độ lợi BS tới RIS
         FCCodewordsBuffer=zeros(N,num_K); % khởi tạo ma trận với kích thước N x num_K để lưu các mã truyền tia viễn trường
         NCCodewordsBuffer=zeros(N,num_K); % khởi tạo ma trận với kích thước N x num_K để lưu các mã truyền tia cận trường
         PftCodewordsBuffer=zeros(N,num_K); % khởi tạo ma trận với kích thước N x num_K để lưu các mã truyền tia kỹ thuật Precoding(PFT)
