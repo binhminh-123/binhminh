@@ -23,7 +23,7 @@ delta = 0.25;%?
 D_oversample=1;%bước nhảy lấy mẫu
 
 realsnr_max=0;
-realsnr_list=[-10:1:realsnr_max];
+realsnr_list=[-10:1:realsnr_max];%mảng giá trị SNR
 
 
 %Need Revise with different x
@@ -62,20 +62,20 @@ Record_MinR_MM=zeros(length(Bigfor_list),1);
 
 
 %% Main
-t0 = clock;
+t0 = clock;%bắt đầu tính thời gian chạy
 for idx_Bigfor=1:length(Bigfor_list)
     LengthBigfor_list=length(Bigfor_list);
     %num_K=K_list(idx_K);
     
     %Need Revise with different x
-    SNR_linear = 10.^(Bigfor_list(idx_Bigfor)/10.);
+    SNR_linear = 10.^(Bigfor_list(idx_Bigfor)/10.);%chuyển giá trị SNR từ giai dB sang giai tuyến tính để thực hiện tính toán
     %% Record buff (For the average calculate e.g. a=a+data./ITER)
     temp_SumR_FF_RIS=0;
     temp_SumR_NF_RIS=0;
     temp_SumR_FF_AP=0;
     temp_SumR_NF_AP=0;
     temp_SumR_MM=0;
-   
+   %tạo biến tạm để tí nữa tính giá trị trung bình
     
     temp_MinR_FF_RIS=0;
     temp_MinR_NF_RIS=0;
@@ -84,25 +84,30 @@ for idx_Bigfor=1:length(Bigfor_list)
     temp_MinR_MM=0;
    
     %% Begin
-    parfor idx_iter=1:ITER
+    parfor idx_iter=1:ITER %chạy các vòng lặp song song nhau
         
         %% Gene Channel from BS to RIS
+        %tạo mảng lưu các giá trị mã kênh
         FCCodewordsBuffer=zeros(N,num_K);
         NCCodewordsBuffer=zeros(N,num_K);
         PftCodewordsBuffer=zeros(N,num_K);
+        %tạo mảng lưu các giá trị độ lợi kênh
         FCGainBuffer=zeros(num_K,1);
         NCGainBuffer=zeros(num_K,1);
         PftGainBuffer=zeros(num_K,1);
+        %tạo mảng lưu giá trị mã lớp 2 có độ lợi lớn nhất
         max_index_2ndlayer=zeros(num_K,1);
         % generate the channel from the BS to the RIS
+        %tạo kênh truyền từ BS tới RIS
         [G,px1,py1,pz1,alpha] = generate_G_near_field_channel(N1,N2,P1);
-        GG=zeros(N,num_K);
+        GG=zeros(N,num_K);%tạo mảng lưu các giá trị kênh truyền cho từng người dùng (có 512 đường tới cho 1 người dùng)
         %% Record Time Clock
         %Need Revise with different x
         fprintf('For SNR  (NearField):i_num=%d of %d,i_iter=%d of %d | run %.4f s\n',idx_Bigfor,LengthBigfor_list,idx_iter,ITER,  etime(clock, t0));
         
         %% generate the channel from the RIS to the UE
-        for k=1:num_K
+        for k=1:num_K %tạo vòng lặp qua từng người dùng
+            %tạo kênh truyền từ RIS-UE
             [hK,px2,py2,pz2,alpha] = generate_hr_near_field_channel(N1,N2,1,P2);
             %hK=hK./sqrt(N);
             Hc = diag(hK)*G;
