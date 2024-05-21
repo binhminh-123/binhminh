@@ -10,14 +10,14 @@ Xdelta1=Delta(1);Ydelta1=Delta(2);Zdelta1=Delta(3);Xdelta2=Delta(4);Ydelta2=Delt
 % Xgrid2 = linspace(Xmin2,Xmax2,Xnum2); Ygrid2 = linspace(Ymin2,Ymax2,Ynum2); Zgrid2 = linspace(Zmin2,Zmax2,Znum2);
 %tăng A -> Delta1 tăng -> khoảng nhảy tăng -> số mã giảm
 %grid sẽ chạy từ Xmin1 tới Xmax1 và chấm sau mỗi khoảng nhảy Xdelta1, Y và Z tương tự
-Xgrid1=[Xmin1:Xdelta1:Xmax1]; Ygrid1=[Ymin1:Ydelta1:Ymax1]; Zgrid1=[Zmin1:Zdelta1:Zmax1];% tạo lưới tọa độ lấy mẫu cho kênh BS-RIS
-Xgrid2=[Xmin2:Xdelta2:Xmax2]; Ygrid2=[Ymin2:Ydelta2:Ymax2]; Zgrid2=[Zmin2:Zdelta2:Zmax2];% tạo lưới tọa độ lấy mẫu cho kênh RIS-UE
+Xgrid1=[Xmin1:Xdelta1:Xmax1]; Ygrid1=[Ymin1:Ydelta1:Ymax1]; Zgrid1=[Zmin1:Zdelta1:Zmax1];% tạo lưới tọa độ các điểm lấy mẫu cho kênh BS-RIS
+Xgrid2=[Xmin2:Xdelta2:Xmax2]; Ygrid2=[Ymin2:Ydelta2:Ymax2]; Zgrid2=[Zmin2:Zdelta2:Zmax2];% tạo lưới tọa độ các điểm lấy mẫu cho kênh RIS-UE
 
 Xnum1=length(Xgrid1); Ynum1=length(Ygrid1); Znum1=length(Zgrid1);%tính số điểm lưới của lưới kênh BS-RIS
 Xnum2=length(Xgrid2); Ynum2=length(Ygrid2); Znum2=length(Zgrid2);%tính số điểm lưới của lưới kênh RIS-UE
 
 record=zeros(Xnum1*Ynum1*Znum1*Xnum2*Ynum2*Znum2,6);%tạo mảng lưu giá trị 2 điểm trên 2 lưới kênh
-codebook = zeros(Xnum1*Ynum1*Znum1*Xnum2*Ynum2*Znum2,N);%tạo ma trận lưu các vector mã codeword
+codebook = zeros(Xnum1*Ynum1*Znum1*Xnum2*Ynum2*Znum2,N);%tạo ma trận lưu các vector mã codeword, phép nhân để xác định tổng số điểm mẫu cần thiết
 i=1;
 %vòng lặp quét qua từng điểm của lưới kênh BS-RIS
 for x1=Xgrid1
@@ -35,8 +35,8 @@ for x1=Xgrid1
                             end
                         end
 %                         a=a/sqrt(N);
-                        codebook(i,:)=a;
-                        record(i,:)=[x1,y1,z1,x2,y2,z2];
+                        codebook(i,:)=a;%lưu giá trị vector a vào hàng thứ i trong tổng số điểm mẫu
+                        record(i,:)=[x1,y1,z1,x2,y2,z2];%lưu giá trị tọa độ các điểm mẫu qua các vòng lặp
                         i=i+1;
                     end
                 end
@@ -45,7 +45,7 @@ for x1=Xgrid1
     end
 end
 
-[codebook,index]=unique(codebook,'row');
-record=record(index,:);
+[codebook,index]=unique(codebook,'row');%loại các hàng có giá trị trùng trong quá trình lặp
+record=record(index,:);%cập nhật lại mảng record sau khi loại các giá trị trùng lặp
 end
 
