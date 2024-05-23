@@ -108,74 +108,76 @@ for idx_Bigfor=1:length(Bigfor_list)
         %% generate the channel from the RIS to the UE
         for k=1:num_K %tạo vòng lặp qua từng người dùng
             %tạo kênh truyền từ RIS-UE
-            [hK,px2,py2,pz2,alpha] = generate_hr_near_field_channel(N1,N2,1,P2);
-            %hK=hK./sqrt(N);
-            Hc = diag(hK)*G;
-            GG(:,k)=Hc;
-            %% FF and NF BT：(Get N(or F)CCodewordsBuffer、N(or F)CGainBuffer、PftGainBuffer)
-            %Far-Field BT
-            [maxGainFC,idxFC]=max(abs(far_codebook*Hc).^2);
-            FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).';
-            FCGainBuffer(k)=maxGainFC;
+            [hK,px2,py2,pz2,alpha] = generate_hr_near_field_channel(N1,N2,1,P2);%gọi hàm tạo kênh truyền cận trường từ RIS - UE
+            %hK=hK./sqrt(N);%chuẩn hóa mảng vector hK
+            Hc = diag(hK)*G;%tính các vector của mảng kênh truyền Hc bằng cách nhân ma trận chéo của hK với ma trận cột G, việc chuyển hK thành ma trận đường chéo giúp tính toán nhanh hơn
+            GG(:,k)=Hc;%lưu các giá trị vector của mảng kênh Hc vào các cột ứng với từng người dùng từ UE1 - UE8
+           
+            %Far-Field BT%tìm ra kênh truyền có độ lợi lớn nhất cho từng người dùng
+            [maxGainFC,idxFC]=max(abs(far_codebook*Hc).^2);%tìm giá trị độ lợi cao nhất trong mảng vào lưu vị trí của giá trị đó là idxFC
+            FCCodewordsBuffer(:,k)=far_codebook(idxFC,:).';%lưu các từ mã(vector) tại hàng idxFC vào cột  k của mảng FCCodewordsBuffer
+            FCGainBuffer(k)=maxGainFC;%lưu giá trị độ lợi lớn nhất vào mảng FCGainBuffer theo cột k
             
             %Near-Field BT
-            array_gain = 0;
+            array_gain = 0;%khởi tạo độ lợi mảng
             max_index=-1;
-            for i =1:size(near_codebook1,1)
-                if abs(near_codebook1(i,:)*Hc)^2>array_gain
-                    max_index=i;
-                    array_gain=abs(near_codebook1(i,:)*Hc)^2;
+            for i =1:size(near_codebook1,1)%cho i chạy từ 1 đến hết số hàng của codebook cận trường
+                if abs(near_codebook1(i,:)*Hc)^2>array_gain%so sánh độ lợi kênh truyền Hc với độ lợi mảng
+                    max_index=i;%nếu lớn hơn thì cập nhật giá trị max_index = 1 
+                    array_gain=abs(near_codebook1(i,:)*Hc)^2;%dùng giá trị độ lợi đó làm độ lới mới cho mảng
                 end
             end
-            NCCodewordsBuffer(:,k)=near_codebook1(max_index,:).';
+            NCCodewordsBuffer(:,k)=near_codebook1(max_index,:).';%lưu hàng có giá trị kênh độ lợi lớn nhất vào cột k của NCCodewordsBuffer
             % generate the second-level codes
             P21=[record(max_index,1)+Delta1(1)/2,record(max_index,1)-Delta1(1)/2,record(max_index,2)+Delta1(2)/2,record(max_index,2)-Delta1(2)/2,record(max_index,3)+Delta1(3)/2,record(max_index,3)-Delta1(3)/2];
             P22=[record(max_index,4)+Delta1(4)/2,record(max_index,4)-Delta1(4)/2,record(max_index,5)+Delta1(5)/2,record(max_index,5)-Delta1(5)/2,record(max_index,6)+Delta1(6)/2,record(max_index,6)-Delta1(6)/2];
+            %thu hẹp vùng phân bố của BS và UE
             
-            near_codebook2 = generate_near_field_codebook(N1,N2,d,P21,P22,Delta1*delta);
-            near_codebook2=near_codebook2./sqrt(N);
+            near_codebook2 = generate_near_field_codebook(N1,N2,d,P21,P22,Delta1*delta);%gọi hàm tạo codebook cận trường mới theo P21, P22 và Delta mới
+            near_codebook2=near_codebook2./sqrt(N);%chuẩn hóa các vector trong codebook
             
-            for i =1:size(near_codebook2,1)
-                if abs(near_codebook2(i,:)*Hc)^2>array_gain
-                    array_gain=abs(near_codebook2(i,:)*Hc)^2;
-                    max_index_2ndlayer(k)=i;
+            for i =1:size(near_codebook2,1)%cho i chạy hết codebook2
+                if abs(near_codebook2(i,:)*Hc)^2>array_gain%so sánh độ lợi kênh cận trường mới với độ lợi mảng đã cập nhật lại ở trên
+                    array_gain=abs(near_codebook2(i,:)*Hc)^2;%nếu lớn hơn thì gán làm độ lợi mảng mới
+                    max_index_2ndlayer(k)=i;%lưu vị trí kênh lớp 2 đó
                 end
             end
-            if max_index_2ndlayer(k)>0 %二层码本起了作用
+            %kiểm tra mã lớp 2 xem có hiệu quả hơn mã lớp 1
+            if max_index_2ndlayer(k)>0 %nếu vị trí đó tồn tại mã lớp 2 hiệu quả thì cập nhật lại các giá trị độ lợi kênh và độ lợi mảng theo mã lớp 2
                 NCCodewordsBuffer(:,k)=near_codebook2(max_index_2ndlayer(k),:).';
                 maxGainNC=array_gain;
                 NCGainBuffer(k)=abs(near_codebook2(max_index_2ndlayer(k),:)*Hc)^2;
             else
-                
+                %nếu không thì vẫn dùng giá trị theo codebook ban đầu
                 NCGainBuffer(k)=abs(NCCodewordsBuffer(:,k).'*Hc)^2;
                 
             end%
             
-            %Pft precoding
-            wc_opt = exp(1j*phase(Hc'));%If can not work in this line maybe with different Matlab version, you can try to use "angle" function to replace "phase"
-            wc_opt=wc_opt./abs(wc_opt)/sqrt(N);
-            array_gainpft = abs(wc_opt*Hc)^2;
-            PftCodewordsBuffer(:,k)=wc_opt.';
-            PftGainBuffer(k)=array_gainpft;
+            %Tối ưu thành phần pha tín hiệu
+            wc_opt = exp(1j*phase(Hc'));%tìm vector pha bằng cách phức hóa giá trị pha của kênh truyền Hc
+            wc_opt=wc_opt./abs(wc_opt)/sqrt(N);%
+            array_gainpft = abs(wc_opt*Hc)^2;%tính độ lợi mảng kênh truyền theo pha
+            PftCodewordsBuffer(:,k)=wc_opt.';%ưu giá trị vectorpha vào cột k của mảng PftCodewordsBuffer
+            PftGainBuffer(k)=array_gainpft;%lưu lại các giá trị độ lợi sau khi tối ưu pha tín hiệu
         end
         %% Deal with channel gain
-        Product_mxg_DFT=prod(sqrt(FCGainBuffer));
-        MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));
-        Product_mxg_NC=prod(sqrt(NCGainBuffer));
-        MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));
-        Product_mxg_Pft=prod(sqrt(PftGainBuffer));
-        MultiBeamPft_Orig=PftCodewordsBuffer*((Product_mxg_Pft./sqrt(PftGainBuffer)));
+        Product_mxg_DFT=prod(sqrt(FCGainBuffer));%tính tích độ lợi viễn trường của cả 8 người dùng(số thực)
+        MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));%tạo vector định hướng chùm tia viễn trường bằng cách nhân codeword viễn trường cho độ lợi viễn trường chung đã chuẩn hóa
+        Product_mxg_NC=prod(sqrt(NCGainBuffer));%tính tích độ lợi cận trường của cả 8 người dùng
+        MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));%tạo vector định hướng chùm tia cận trường bằng cách nhân codeword cận trường cho độ lợi cận trường chung đã chuẩn hóa
+        Product_mxg_Pft=prod(sqrt(PftGainBuffer));%tính tích độ lợi cho cả 8 UE sau khi tối ưu hệ số pha
+        MultiBeamPft_Orig=PftCodewordsBuffer*((Product_mxg_Pft./sqrt(PftGainBuffer)));%tạo vector định hướng cho chùm tia sau khi tối ưu hệ số pha
         %% Gene the Superpose FF-BF
-        %MultiBeamFC_Orig=sum(FCCodewordsBuffer,2);
-        record_zeroFC=find(MultiBeamFC_Orig==0);
-        MultiBeamFC_Orig(record_zeroFC)=exp(1j*2*pi*rand)/sqrt(N);
-        MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N);
-        MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N);
+        
+        record_zeroFC=find(MultiBeamFC_Orig==0);%tìm các giá trị kênh bị trống
+        MultiBeamFC_Orig(record_zeroFC)=exp(1j*2*pi*rand)/sqrt(N);%lấp các giá trị kênh trống đó với hàm ngẫu nhiên để đảm bảo không có tia nào bị rỗng(mảng vector)
+        MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N);%tạo đường đa tia tới mảng RIS và chuẩn hóa độ dài thành 1(mảng vector)
+        MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N);%tạo đường đa tia tới UE, chọn ra đường tối ưu nhất và chuẩn hóa thành 1(mảng vector)
         %% Gene the Superpose NF-BF
-        %MultiBeamNC_Orig=sum(NCCodewordsBuffer,2);
+
         record_zeroNC=find(MultiBeamNC_Orig==0);
-        MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N);
-        MultiBeamNCRIS=MultiBeamNC_Orig./abs(MultiBeamNC_Orig)/sqrt(N);
+        MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N);(trong mảng MultiBeamNC_Orig, tại vị trí record_zeroNC, là vector exp(1j*2*pi*rand)/sqrt(N) ngẫu nhiên)
+        MultiBeamNCRIS=MultiBeamNC_Orig./abs(MultiBeamNC_Orig)/sqrt(N);(mảng vector)
         MultiBeamNCDig=MultiBeamNC_Orig/norm(MultiBeamNC_Orig);%Use for MM's v_abs setting
         MultiBeamNCAP=MultiBeamNC_Orig./max(abs(MultiBeamNC_Orig))/sqrt(N);%Which means that the Amplitude & Phase can be adjusted. (But the Amplitude is in [0,1])
         %
@@ -195,35 +197,36 @@ for idx_Bigfor=1:length(Bigfor_list)
         G_MultiBeam_NFSuperpose_AP=abs(MultiBeamNCAP.'*GG).^2;%(AP BF)
         
         %% MM Algorithm
-        loss3 = [];
-        eta=1;
-        v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta;
-        w3 = exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N);
+        loss3 = [];%khởi tạo mảng lưu giá trị suy hao
+        eta=1;%hệ số kiểm soát độ lớn v_abs3
+        v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta;%vector chứa giá trị độ lớn của các phần tử trong vector v3(ngẫu nhiên)
+        w3 = exp(1j*1*pi*(2*rand(N,1)-1))/sqrt(N);%là vector phức khởi tạo ngẫu nhiên và đc chuẩn hóa rồi cập nhật qua từng vòng lặp nhằm giảm thiểu khác biệt giữa v3 và 
         
-        v_phase=exp(1j*1*pi*(2*rand(num_K,1)-1));
-        v3 = v_abs3.*v_phase;
+        v_phase=exp(1j*1*pi*(2*rand(num_K,1)-1));%vector chứa pha dùng cho vector v3(ngẫu nhiên)
+        v3 = v_abs3.*v_phase;%vector định hướng đc khởi tạo ngẫu nhiên để bắt đầu vòng lặp
         
-        A=conj(NCCodewordsBuffer).';%根据近场码本确定A     k*n
+        A=conj(NCCodewordsBuffer).';%chuyển vị liên hợp của từ mã cận trường
         A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).';%根据近场码本确定A     k*n
         %A=GG.';
-        lambda = max(eig(A'*A));
-        max_iter=200;
+        lambda = max(eig(A'*A));%tính giá trị riêng lớn nhất của tích ma trận A'.A
+        max_iter=200;%giới hạn vòng lặp
         % Iteration
         for i=1:max_iter
             % update v_phase
-            f = A*w3;
-            v_phase = exp(1j * angle(f)); % update support set
-            v3 = v_abs3 .* v_phase;
+            f = A*w3;%hàm thay thế
+            v_phase = exp(1j * angle(f)); %cập nhật lại giá trị v_phase theo f
+            v3 = v_abs3 .* v_phase;%cập nhật lại giá trị v3 theo v_phase mới
             % update w3
             w3_0iter=w3;
             for j_MM=1:10
                 temp = A' * v3 - A' * A * w3_0iter + lambda * w3_0iter ;
                 w3_0iter = exp( 1j*angle( temp ))/sqrt(N);
-                
+                %vòng lặp tối ưu giá trị w3
             end
-            w3=w3_0iter;
-            loss3 = [loss3, norm(v3 - A * w3, 2)];
+            w3=w3_0iter;%gán giá trị w3 mới
+            loss3 = [loss3, norm(v3 - A * w3, 2)];%cập nhật giá trị suy hao theo phép toán euclid bình phương cho thấy khác biệt giữa v3 và hàm f
         end
+        %kết quả vòng lặp trả ra là vector hình thành tia w3 với giá trị biên độ v_abs3 và v_phase được tối ưu
         %% Calculate MM MultiBeam Gain
         G_MultiBeam_MM=abs(w3.'*GG).^2;
         G_MM=abs(w3.'*GG).^2;
