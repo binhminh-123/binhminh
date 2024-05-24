@@ -22,8 +22,8 @@ for k=1:K
             %tìm vector định hướng kênh RIS-UE bằng cách phức hóa modul vector từ phần tử RIS tới điểm lấy mẫu UE và nhân với hệ số độ lợi phức alpha
         end
     end
-    hr = 1*a;%lưu giá trị vector a vào mảng kênh hr
-    hK(:,k) = hr./sqrt(N);%lưu giá trị vector đã chuẩn hóa của mảng kênh hr vào cột thứ k mảng kênh hK
-    aK(:,k) = a;%???
+    hr = 1*a;%lưu giá trị vector a vào kênh hr
+    hK(:,k) = hr./sqrt(N);%lưu giá trị vector hr đã chuẩn hóa vào cột thứ k mảng kênh hK
+    aK(:,k) = a;
 end
 
