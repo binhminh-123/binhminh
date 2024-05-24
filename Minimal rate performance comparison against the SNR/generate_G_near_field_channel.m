@@ -18,4 +18,4 @@ for n1=1:N1
     end
 end
 G = 1*a;%gán giá trị vector a vào mảng G
-
+%mỗi giá trị của mảng là vector định hướng kênh với biên độ là module vector và pha là arctan(ảo/thực)
