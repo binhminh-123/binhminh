@@ -2,8 +2,8 @@ function [codebook,record] = generate_near_field_codebook(N1,N2,d,P1,P2,Delta)
 %codebook được tạo từ giá trị của các vector định hướng, mỗi vector đc tạo từ 1 cặp điểm lấy mẫu trong 2 vùng phân bố
 N=N1*N2;
 
-Xmax1=P1(1); Xmin1=P1(2); Ymax1=P1(3); Ymin1=P1(4); Zmax1=P1(5); Zmin1=P1(6);%giới hạn vùng phân bố của trạm phát sóng
-Xmax2=P2(1); Xmin2=P2(2); Ymax2=P2(3); Ymin2=P2(4); Zmax2=P2(5); Zmin2=P2(6);%giới hạn vùng phân bố của User
+Xmax1=P1(1); Xmin1=P1(2); Ymax1=P1(3); Ymin1=P1(4); Zmax1=P1(5); Zmin1=P1(6);%giới hạn vùng phân bố các điểm lấy mẫu của trạm phát sóng
+Xmax2=P2(1); Xmin2=P2(2); Ymax2=P2(3); Ymin2=P2(4); Zmax2=P2(5); Zmin2=P2(6);%giới hạn vùng phân bố các điểm lấy mẫu của User
 Xdelta1=Delta(1);Ydelta1=Delta(2);Zdelta1=Delta(3);Xdelta2=Delta(4);Ydelta2=Delta(5);Zdelta2=Delta(6);%khoảng cách giữa các điểm lấy mẫu trên lưới tọa độ
 
 % Xgrid1 = linspace(Xmin1,Xmax1,Xnum1); Ygrid1 = linspace(Ymin1,Ymax1,Ynum1); Zgrid1 = linspace(Zmin1,Zmax1,Znum1);
