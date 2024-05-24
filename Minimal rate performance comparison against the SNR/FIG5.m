@@ -41,9 +41,9 @@ P4=P3;
 P1=P3;
 P2=P3;
 Delta = 1*[100*d,100*d,100*d,100*d,100*d,100*d];%là vector chứa các giá trị khoảng cách
-Delta1 = Delta*A;%dùng để tăng hoặc giảm kích thước codebook, tỷ lệ nghịch
-[near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);%tạo codebook
-near_codebook1=near_codebook1./sqrt(N);%chuẩn hóa các vector trong codebook
+Delta1 = Delta*A;%dùng để tăng hoặc giảm kích thước codebook, tỷ lệ nghịch với A, khoảng mẫu
+[near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);%tạo codebook cho vùng cận trường
+near_codebook1=near_codebook1./sqrt(N);%chuẩn hóa các vector trong codebook nhằm đảm bảo công suất truyền
 disp("Finish Codebooks Gene")
 
 %% Record the Rate(Final Used for Plot)
