@@ -3,36 +3,36 @@ clear all
 close all
 tic
 
-%最小用户速率随SNR增长的变化
+%so sánh tốc độ truyền tối thiểu với từng mức SNR
 
-%% Para. Setup
+%% Thiết lập thông số
 N1 =64;
 N2 = 8;
-N = N1*N2; % the number of RIS elements
-d = 0.5; % the antenna spacing 
+N = N1*N2; % số lượng phần tử phản xạ
+d = 0.5; % khoảng cách giữa các phần tử 
 
-%K是UE
+%số lượng người dùng
 K=8;
 num_K=K;
 
-% Iter Num. Fig in the paper is gene. with ITER = 600;
+% Số lần lặp, Fig trong bài báo chạy với số lần lặp là 600;
 ITER = 100;
 
 A = 4;%điều chỉnh Delta nhằm thay đổi kích thước codebook, Delta_1 càng lớn thì codebook càng ít mã
-delta = 0.25;%?
+delta = 0.25;%bổ sung cho giá trị Delta của mã lớp 2
 D_oversample=1;%bước nhảy lấy mẫu
 
-realsnr_max=0;
-realsnr_list=[-10:1:realsnr_max];%mảng giá trị SNR
+realsnr_max=0;%giá trị SNR lớn nhất
+realsnr_list=[-10:1:realsnr_max];%mảng giá trị SNR chạy từ -10 đến snr_max
 
 
-%Need Revise with different x
+
 Bigfor_list=realsnr_list;
-%% Gene Codebook
+%% Tạo 2 codebook
 disp("Gene Near and Far Codebooks……")
-% generate the far-field codebook
-UN1 = exp(1i*2*pi*[0:(N1-1)*D_oversample]'*d*[0:N1-1]*(2/N1/D_oversample))/sqrt(N1);%ma trận số phức với phần thực là biên độ tín hiệu, phần ảo là pha của tín hiệu theo chiều ngang
-UN2 = exp(1i*2*pi*[0:(N2-1)*D_oversample]'*d*[0:N2-1]*(2/N2/D_oversample))/sqrt(N2);%ma trận số phức với phần thực là biên độ tín hiệu, phần ảo là pha của tín hiệu theo chiều dọc
+% tạo codebook viễn trường bằng cách nhân Kronecker 2 mảng vector UN1 và Un2
+UN1 = exp(1i*2*pi*[0:(N1-1)*D_oversample]'*d*[0:N1-1]*(2/N1/D_oversample))/sqrt(N1);%ma trận số phức tín hiệu theo chiều ngang
+UN2 = exp(1i*2*pi*[0:(N2-1)*D_oversample]'*d*[0:N2-1]*(2/N2/D_oversample))/sqrt(N2);%ma trận số phức  tín hiệu theo chiều dọc
 %do ko dùng góc trực tiếp nên dùng công thức [0:N1-1]*(2/N1/D_oversample) để tính góc chạy của tín hiệu và triệt tiêu lamda do = 1)
 far_codebook = kron(UN1,UN2); %codebook là 1 mảng chứa các vector đại diện cho các hướng và cách thức truyền tín hiệu không dây
 
@@ -41,19 +41,20 @@ P4=P3;
 P1=P3;
 P2=P3;
 Delta = 1*[100*d,100*d,100*d,100*d,100*d,100*d];%là vector chứa các giá trị khoảng cách
-Delta1 = Delta*A;%dùng để tăng hoặc giảm kích thước codebook, tỷ lệ nghịch với A, khoảng mẫu
-[near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);%tạo codebook cho vùng cận trường
-near_codebook1=near_codebook1./sqrt(N);%chuẩn hóa các vector trong codebook nhằm đảm bảo công suất truyền
+Delta1 = Delta*A;%dùng để tăng hoặc giảm kích thước codebook, tỷ lệ nghịch với A, độ dài từ mã
+[near_codebook1,record] = generate_near_field_codebook(N1,N2,d,P3,P4,Delta1);%gọi hàm tạo codebook cho vùng cận trường
+near_codebook1=near_codebook1./sqrt(N);%chuẩn hóa các vector trong codebook
 disp("Finish Codebooks Gene")
 
 %% Record the Rate(Final Used for Plot)
+%tạo các mảng lưu giá trị tổng tốc độ truyền cho từng phương pháp ứng với từng mức SNR
 Record_SumR_FF_RIS=zeros(length(Bigfor_list),1);
 Record_SumR_NF_RIS=zeros(length(Bigfor_list),1);
 Record_SumR_FF_AP=zeros(length(Bigfor_list),1);
 Record_SumR_NF_AP=zeros(length(Bigfor_list),1);
 Record_SumR_MM=zeros(length(Bigfor_list),1);
 
-
+%tạo các mảng lưu giá trị tổng tốc độ truyền tối thiểu cho từng phương pháp ứng với từng mức SNR
 Record_MinR_FF_RIS=zeros(length(Bigfor_list),1);
 Record_MinR_NF_RIS=zeros(length(Bigfor_list),1);
 Record_MinR_FF_AP=zeros(length(Bigfor_list),1);
@@ -65,18 +66,16 @@ Record_MinR_MM=zeros(length(Bigfor_list),1);
 t0 = clock;%bắt đầu tính thời gian chạy
 for idx_Bigfor=1:length(Bigfor_list)
     LengthBigfor_list=length(Bigfor_list);
-    %num_K=K_list(idx_K);
     
-    %Need Revise with different x
     SNR_linear = 10.^(Bigfor_list(idx_Bigfor)/10.);%chuyển giá trị SNR từ giai dB sang giai tuyến tính để thực hiện tính toán
     %% Record buff (For the average calculate e.g. a=a+data./ITER)
+    %biến phụ để tính giá trị trung bình tổng tốc độ truyền
     temp_SumR_FF_RIS=0;
     temp_SumR_NF_RIS=0;
     temp_SumR_FF_AP=0;
     temp_SumR_NF_AP=0;
     temp_SumR_MM=0;
-   %tạo biến tạm để tí nữa tính giá trị trung bình
-    
+   %biến phụ để tính giá trị trung bình tổng tốc độ truyền tối thiểu
     temp_MinR_FF_RIS=0;
     temp_MinR_NF_RIS=0;
     temp_MinR_FF_AP=0;
@@ -101,8 +100,8 @@ for idx_Bigfor=1:length(Bigfor_list)
         %tạo kênh truyền từ BS tới RIS
         [G,px1,py1,pz1,alpha] = generate_G_near_field_channel(N1,N2,P1);
         GG=zeros(N,num_K);%tạo mảng lưu các giá trị kênh truyền cho từng người dùng (có 512 đường tới cho 1 người dùng)
-        %% Record Time Clock
-        %Need Revise with different x
+        %% In ra thời gian chạy của các vòng lặp
+        
         fprintf('For SNR  (NearField):i_num=%d of %d,i_iter=%d of %d | run %.4f s\n',idx_Bigfor,LengthBigfor_list,idx_iter,ITER,  etime(clock, t0));
         
         %% generate the channel from the RIS to the UE
@@ -176,8 +175,8 @@ for idx_Bigfor=1:length(Bigfor_list)
         %% Gene the Superpose NF-BF
 
         record_zeroNC=find(MultiBeamNC_Orig==0);
-        MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N);(trong mảng MultiBeamNC_Orig, tại vị trí record_zeroNC, là vector exp(1j*2*pi*rand)/sqrt(N) ngẫu nhiên)
-        MultiBeamNCRIS=MultiBeamNC_Orig./abs(MultiBeamNC_Orig)/sqrt(N);(mảng vector)
+        MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N);%(thay giá trị trong mảng MultiBeamNC_Orig, tại vị trí record_zeroNC, là vector exp(1j*2*pi*rand)/sqrt(N) ngẫu nhiên)
+        MultiBeamNCRIS=MultiBeamNC_Orig./abs(MultiBeamNC_Orig)/sqrt(N);%(mảng vector)
         MultiBeamNCDig=MultiBeamNC_Orig/norm(MultiBeamNC_Orig);%Use for MM's v_abs setting
         MultiBeamNCAP=MultiBeamNC_Orig./max(abs(MultiBeamNC_Orig))/sqrt(N);%Which means that the Amplitude & Phase can be adjusted. (But the Amplitude is in [0,1])
         %
