@@ -9,7 +9,7 @@ tic
 N1 =64;
 N2 = 8;
 N = N1*N2; % the number of RIS elements
-d = 0.5; % the antenna spacing lambda/2
+d = 0.5; % the antenna spacing 
 
 %K是UE
 K=8;
