@@ -2,14 +2,14 @@ function [codebook,record] = generate_near_field_codebook(N1,N2,d,P1,P2,Delta)
 %codebook được tạo từ giá trị của các vector định hướng, mỗi vector đc tạo từ 1 cặp điểm lấy mẫu trong 2 vùng phân bố
 N=N1*N2;
 
-Xmax1=P1(1); Xmin1=P1(2); Ymax1=P1(3); Ymin1=P1(4); Zmax1=P1(5); Zmin1=P1(6);%giới hạn vùng phân bố các điểm lấy mẫu của trạm phát sóng
-Xmax2=P2(1); Xmin2=P2(2); Ymax2=P2(3); Ymin2=P2(4); Zmax2=P2(5); Zmin2=P2(6);%giới hạn vùng phân bố các điểm lấy mẫu của User
+Xmax1=P1(1); Xmin1=P1(2); Ymax1=P1(3); Ymin1=P1(4); Zmax1=P1(5); Zmin1=P1(6);%giới hạn vùng phân bố của trạm phát sóng
+Xmax2=P2(1); Xmin2=P2(2); Ymax2=P2(3); Ymin2=P2(4); Zmax2=P2(5); Zmin2=P2(6);%giới hạn vùng phân bố của User
 Xdelta1=Delta(1);Ydelta1=Delta(2);Zdelta1=Delta(3);Xdelta2=Delta(4);Ydelta2=Delta(5);Zdelta2=Delta(6);%khoảng cách giữa các điểm lấy mẫu trên lưới tọa độ
 
 % Xgrid1 = linspace(Xmin1,Xmax1,Xnum1); Ygrid1 = linspace(Ymin1,Ymax1,Ynum1); Zgrid1 = linspace(Zmin1,Zmax1,Znum1);
 % Xgrid2 = linspace(Xmin2,Xmax2,Xnum2); Ygrid2 = linspace(Ymin2,Ymax2,Ynum2); Zgrid2 = linspace(Zmin2,Zmax2,Znum2);
 %tăng A -> Delta1 tăng -> khoảng nhảy tăng -> số mã giảm
-%grid sẽ chạy từ Xmin1 tới Xmax1 và chấm sau mỗi khoảng nhảy Xdelta1, Y và Z tương tự
+%tọa độ grid sẽ chạy từ Xmin1 tới Xmax1 và chấm sau mỗi khoảng nhảy Xdelta1, Y và Z tương tự
 Xgrid1=[Xmin1:Xdelta1:Xmax1]; Ygrid1=[Ymin1:Ydelta1:Ymax1]; Zgrid1=[Zmin1:Zdelta1:Zmax1];% tạo lưới tọa độ các điểm lấy mẫu cho kênh BS-RIS
 Xgrid2=[Xmin2:Xdelta2:Xmax2]; Ygrid2=[Ymin2:Ydelta2:Ymax2]; Zgrid2=[Zmin2:Zdelta2:Zmax2];% tạo lưới tọa độ các điểm lấy mẫu cho kênh RIS-UE
 
