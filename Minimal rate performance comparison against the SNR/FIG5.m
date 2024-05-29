@@ -1,3 +1,4 @@
+%đây là code so sánh tốc độ truyền tải tối thiểu ở từng mức nhiễu SNR, ở đây ta xét thiết kế đa tia từ phía RIS đến UE, còn từ trạm BS đến RIS thì ta dùng đơn tia nhằm tối ưu hóa công suất đường truyền tới. 
 clc;
 clear all
 close all
