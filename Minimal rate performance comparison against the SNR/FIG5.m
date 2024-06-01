@@ -154,17 +154,17 @@ for idx_Bigfor=1:length(Bigfor_list)
             end%
             
             %Tối ưu thành phần pha tín hiệu
-            wc_opt = exp(1j*phase(Hc'));%tìm vector pha bằng cách phức hóa giá trị pha của kênh truyền Hc
-            wc_opt=wc_opt./abs(wc_opt)/sqrt(N);%
+            wc_opt = exp(1j*phase(Hc'));%tìm vector chứa pha bằng cách phức hóa giá trị pha của kênh truyền Hc
+            wc_opt=wc_opt./abs(wc_opt)/sqrt(N);%chuẩn hóa các tor pha
             array_gainpft = abs(wc_opt*Hc)^2;%tính độ lợi mảng kênh truyền theo pha
-            PftCodewordsBuffer(:,k)=wc_opt.';%ưu giá trị vectorpha vào cột k của mảng PftCodewordsBuffer
+            PftCodewordsBuffer(:,k)=wc_opt.';%lưu giá trị vector pha vào cột k của mảng PftCodewordsBuffer
             PftGainBuffer(k)=array_gainpft;%lưu lại các giá trị độ lợi sau khi tối ưu pha tín hiệu
         end
         %% Deal with channel gain
-        Product_mxg_DFT=prod(sqrt(FCGainBuffer));%tính tích độ lợi viễn trường của cả 8 người dùng(số thực)
-        MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));%tạo vector định hướng chùm tia viễn trường bằng cách nhân codeword viễn trường cho độ lợi viễn trường chung đã chuẩn hóa
-        Product_mxg_NC=prod(sqrt(NCGainBuffer));%tính tích độ lợi cận trường của cả 8 người dùng
-        MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));%tạo vector định hướng chùm tia cận trường bằng cách nhân codeword cận trường cho độ lợi cận trường chung đã chuẩn hóa
+        Product_mxg_DFT=prod(sqrt(FCGainBuffer));%tính tích độ lợi viễn trường của cả 8 người dùng để tính ra được độ lớn của tín hiệu tổng hợp
+        MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));%tạo vector định hướng chùm tia viễn trường bằng cách nhân codeword viễn trường cho độ lợi viễn trường tổng hợp đã chuẩn hóa
+        Product_mxg_NC=prod(sqrt(NCGainBuffer));%tính tích độ lợi cận trường của cả 8 người dùng để tính ra được độ lớn của tín hiệu tổng hợp
+        MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));%tạo vector định hướng chùm tia cận trường bằng cách nhân codeword cận trường cho độ lợi cận trường tổng hợp đã chuẩn hóa
         Product_mxg_Pft=prod(sqrt(PftGainBuffer));%tính tích độ lợi cho cả 8 UE sau khi tối ưu hệ số pha
         MultiBeamPft_Orig=PftCodewordsBuffer*((Product_mxg_Pft./sqrt(PftGainBuffer)));%tạo vector định hướng cho chùm tia sau khi tối ưu hệ số pha
         %% Gene the Superpose FF-BF
