@@ -160,43 +160,42 @@ for idx_Bigfor=1:length(Bigfor_list)
             PftCodewordsBuffer(:,k)=wc_opt.';%lưu giá trị vector pha vào cột k của mảng PftCodewordsBuffer
             PftGainBuffer(k)=array_gainpft;%lưu lại các giá trị độ lợi sau khi tối ưu pha tín hiệu
         end
-        %% Deal with channel gain
+        %% Độ lợi tia tổng hợp và từ mã đa tia
         Product_mxg_DFT=prod(sqrt(FCGainBuffer));%tính tích độ lợi viễn trường của cả 8 người dùng để tính ra được độ lớn của tín hiệu tổng hợp
         MultiBeamFC_Orig=FCCodewordsBuffer*((Product_mxg_DFT./sqrt(FCGainBuffer)));%tạo vector định hướng chùm tia viễn trường bằng cách nhân codeword viễn trường cho độ lợi viễn trường tổng hợp đã chuẩn hóa
         Product_mxg_NC=prod(sqrt(NCGainBuffer));%tính tích độ lợi cận trường của cả 8 người dùng để tính ra được độ lớn của tín hiệu tổng hợp
         MultiBeamNC_Orig=NCCodewordsBuffer*((Product_mxg_NC./sqrt(NCGainBuffer)));%tạo vector định hướng chùm tia cận trường bằng cách nhân codeword cận trường cho độ lợi cận trường tổng hợp đã chuẩn hóa
         Product_mxg_Pft=prod(sqrt(PftGainBuffer));%tính tích độ lợi cho cả 8 UE sau khi tối ưu hệ số pha
         MultiBeamPft_Orig=PftCodewordsBuffer*((Product_mxg_Pft./sqrt(PftGainBuffer)));%tạo vector định hướng cho chùm tia sau khi tối ưu hệ số pha
-        %% Gene the Superpose FF-BF
         
+        %% Tạo đa tia viễn trường
         record_zeroFC=find(MultiBeamFC_Orig==0);%tìm các giá trị kênh bị trống
         MultiBeamFC_Orig(record_zeroFC)=exp(1j*2*pi*rand)/sqrt(N);%lấp các giá trị kênh trống đó với hàm ngẫu nhiên để đảm bảo không có tia nào bị rỗng(mảng vector)
-        MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N);%tạo đường đa tia tới mảng RIS và chuẩn hóa độ dài thành 1(mảng vector)
-        MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N);%tạo đường đa tia tới UE, chọn ra đường tối ưu nhất và chuẩn hóa thành 1(mảng vector)
-        %% Gene the Superpose NF-BF
-
+        MultiBeamFCRIS=MultiBeamFC_Orig./abs(MultiBeamFC_Orig)/sqrt(N);%tạo đường đa tia tới mảng RIS và chuẩn hóa các vector của mảng
+        MultiBeamFCAP=MultiBeamFC_Orig./max(abs(MultiBeamFC_Orig))/sqrt(N);%tạo đường đa tia tới UE, chọn ra đường tối ưu nhất và chuẩn hóa vector đó
+       
+        %% Tạo đa tia cận trường
         record_zeroNC=find(MultiBeamNC_Orig==0);
         MultiBeamNC_Orig(record_zeroNC)=exp(1j*2*pi*rand)/sqrt(N);%(thay giá trị trong mảng MultiBeamNC_Orig, tại vị trí record_zeroNC, là vector exp(1j*2*pi*rand)/sqrt(N) ngẫu nhiên)
         MultiBeamNCRIS=MultiBeamNC_Orig./abs(MultiBeamNC_Orig)/sqrt(N);%(mảng vector)
         MultiBeamNCDig=MultiBeamNC_Orig/norm(MultiBeamNC_Orig);%Use for MM's v_abs setting
         MultiBeamNCAP=MultiBeamNC_Orig./max(abs(MultiBeamNC_Orig))/sqrt(N);%Which means that the Amplitude & Phase can be adjusted. (But the Amplitude is in [0,1])
-        %
-        %% Gene the Superpose Pft-BF
-        %MultiBeamPft_Orig=sum(PftCodewordsBuffer,2);
+    
+        %% Tạo đa tia theo phương pháp tiền mã hóa
         record_zeroPft=find(MultiBeamPft_Orig==0);
         MultiBeamPft_Orig(record_zeroPft)=exp(1j*2*pi*rand)/sqrt(N);
         MultiBeamPftRIS=MultiBeamPft_Orig./abs(MultiBeamPft_Orig)/sqrt(N);
         MultiBeamPftDig=MultiBeamPft_Orig/norm(MultiBeamPft_Orig);%Use for MM's v_abs setting
         
         %
-        %% Calculate the MultiBeam Gain
+        %% Tính độ lợi đa tia cho từng phương pháp
         G_MultiBeam_FFSuperpose=abs(MultiBeamFCRIS.'*GG).^2;%size:1 * K (RIS BF)
         G_MultiBeam_NFSuperpose=abs(MultiBeamNCRIS.'*GG).^2;%(RIS BF)
         G_MultiBeam_PftSuperpose=abs(MultiBeamPftDig.'*GG).^2;%(Dig BF)
         G_MultiBeam_FFSuperpose_AP=abs(MultiBeamFCAP.'*GG).^2;%size:1 * K (AP BF)
         G_MultiBeam_NFSuperpose_AP=abs(MultiBeamNCAP.'*GG).^2;%(AP BF)
         
-        %% MM Algorithm
+        %% Thuật toán MM
         loss3 = [];%khởi tạo mảng lưu giá trị suy hao
         eta=1;%hệ số kiểm soát độ lớn v_abs3
         v_abs3=max(sqrt(G_MultiBeam_PftSuperpose))*ones(1,num_K)'*eta;%vector chứa giá trị độ lớn của các phần tử trong vector v3(ngẫu nhiên)
@@ -206,9 +205,9 @@ for idx_Bigfor=1:length(Bigfor_list)
         v3 = v_abs3.*v_phase;%vector định hướng đc khởi tạo ngẫu nhiên để bắt đầu vòng lặp
         
         A=conj(NCCodewordsBuffer).';%chuyển vị liên hợp của từ mã cận trường
-        A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).';%根据近场码本确定A     k*n
-        %A=GG.';
-        lambda = max(eig(A'*A));%tính giá trị riêng lớn nhất của tích ma trận A'.A
+        A=diag(sqrt(NCGainBuffer))*conj(NCCodewordsBuffer).';
+        
+        lambda = max(eig(A'*A));%tính giá trị riêng lớn nhất của tích ma trận A'.A theo định lý 1
         max_iter=200;%giới hạn vòng lặp
         % Iteration
         for i=1:max_iter
@@ -227,18 +226,23 @@ for idx_Bigfor=1:length(Bigfor_list)
             loss3 = [loss3, norm(v3 - A * w3, 2)];%cập nhật giá trị suy hao theo phép toán euclid bình phương cho thấy khác biệt giữa v3 và hàm f
         end
         %kết quả vòng lặp trả ra là vector hình thành tia w3 với giá trị biên độ v_abs3 và v_phase được tối ưu
-        %% Calculate MM MultiBeam Gain
+        
+        %% Tính độ lợi đa tia cho thuật toán MM
         G_MultiBeam_MM=abs(w3.'*GG).^2;
         G_MM=abs(w3.'*GG).^2;
-        %% Calculate Rate for every UE
-        R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.');%Size K*1
+       
+        %% Tính tốc độ truyền cho từng UE và đổi về đơn vị bps
+        %tốc độ truyền từ BS - RIS
+        R_FF_RIS=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose.'); %nhân độ lợi đa tia cho nhiễu rồi đổi ra đơn vị bps
         R_NF_RIS=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose.');
+        %tốc độ truyền từ RIS - UE
         R_FF_AP=log2(1+SNR_linear.*G_MultiBeam_FFSuperpose_AP.');
         R_NF_AP=log2(1+SNR_linear.*G_MultiBeam_NFSuperpose_AP.');
+        %Thuật toán MM
         R_MM=log2(1+SNR_linear.*G_MultiBeam_MM.');
         
         
-        %% Calculate Sum-Rate & MinRate
+        %% Tính tổng tốc độ truyền và tốc độ truyền tối thiểu
         SumR_FF_RIS=sum(R_FF_RIS);
         SumR_NF_RIS=sum(R_NF_RIS);
         SumR_FF_AP=sum(R_FF_AP);
